@@ -1,6 +1,8 @@
 import json
 import sqlite3
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
+from operator import methodcaller
 from pathlib import Path
 from typing import List, NamedTuple
 
@@ -67,6 +69,11 @@ class MapPiece:
     def decode_pixels(self) -> List[Color]:
         pixels: List[int] = MapPiecePixelsMessage().parse(self.pixels_blob).pixels
         return [Color.from_int32(pixel) for pixel in pixels]
+    
+    def render(self) -> Image.Image:
+        img = Image.new("RGB", (CHUNK_WIDTH, CHUNK_WIDTH))
+        img.putdata(self.decode_pixels())
+        return img
 
 
 @dataclass
@@ -110,7 +117,6 @@ class Config:
 
 def main():
     config = Config.from_file(CONFIG_PATH)
-
     bounds = config.map_bounds
     width_in_blocks = bounds.bottomright.x - bounds.topleft.x + 1
     height_in_blocks = bounds.bottomright.z - bounds.topleft.z + 1
@@ -120,33 +126,42 @@ def main():
     cursor = conn.cursor()
     cursor.execute("SELECT position, data FROM mappiece")
 
-    count = 0
-    for position, data in cursor:
-        map_piece = MapPiece(position, data)
-        block_pos = map_piece.get_block_position()
+    map_pieces = [MapPiece(pos, data) for pos, data in cursor]
+    conn.close()
+    print(f"Loaded {len(map_pieces)} map pieces from the database.")
+    map_pieces = [chunk for chunk in map_pieces if chunk.get_block_position().in_bounds(bounds.topleft, bounds.bottomright)]
+    print(f"Filtered out of bounds map pieces, {len(map_pieces)} chunks remaining.")
 
-        if not block_pos.in_bounds(bounds.topleft, bounds.bottomright):
-            #print(f"Chunk {block_pos} out of bounds, skipping")
-            continue
+    with ProcessPoolExecutor() as executor:
+        for idx, (map_piece, piece_image) in enumerate(zip(map_pieces, executor.map(methodcaller("render"), map_pieces))):
+            if idx % 100 == 0:
+                print(f"Processed {idx} map pieces...")
+            blockpos = map_piece.get_block_position()
+            pixel_x = blockpos.x - bounds.topleft.x
+            pixel_z = blockpos.z - bounds.topleft.z
+            image.paste(piece_image, (pixel_x, pixel_z))
 
-        colors: List[Color] = map_piece.decode_pixels()
-
-        for dz in range(CHUNK_WIDTH):
-            for dx in range(CHUNK_WIDTH):
-                idx = dz * CHUNK_WIDTH + dx
-                pixel_x = block_pos.x + dx - bounds.topleft.x
-                pixel_z = block_pos.z + dz - bounds.topleft.z
-                if 0 <= pixel_x < width_in_blocks and 0 <= pixel_z < height_in_blocks:
-                    image.putpixel((pixel_x, pixel_z), colors[idx])
-        count += 1
-
-    print(f"{count} chunks processed")
-    if count == 0:
-        print("Are you sure you correctly specified the map bounds?")
-    else:
-        image.save(config.output_path)
-        print(f"Image saved as {config.output_path}")
+    image.save(config.output_path)
+    print(f"Image saved as {config.output_path}")
 
 
 if __name__ == "__main__":
     main()
+
+
+# if __name__ == "__main__":
+#     import cProfile
+#     import pstats
+#     import io
+
+#     pr = cProfile.Profile()
+#     pr.enable()
+#     main()
+#     pr.disable()
+
+#     s = io.StringIO()
+#     ps = pstats.Stats(pr, stream=s).strip_dirs().sort_stats("cumtime")
+#     ps.print_stats(30)
+#     print(s.getvalue())
+
+
