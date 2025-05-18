@@ -1,8 +1,8 @@
 {
-  "map_file": "80df074d-1653-4d17-9e92-880613efa56a.db",
+  "map_file": "17036cd4-fd1c-4c2b-87ff-5c5e3fe6eee7.db",
   "output": "vs_worldmap.png",
-  "min_x": 511800,
-  "max_x": 512200,
-  "min_z": 511800,
-  "max_z": 512200
+  "min_x": 511000,
+  "max_x": 513000,
+  "min_z": 511000,
+  "max_z": 513000
 }
