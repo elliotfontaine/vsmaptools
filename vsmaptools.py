@@ -141,8 +141,11 @@ def main():
         count += 1
 
     print(f"{count} chunks processed")
-    image.save(config.output_path)
-    print(f"Image saved as {config.output_path}")
+    if count == 0:
+        print("Are you sure you correctly specified the map bounds?")
+    else:
+        image.save(config.output_path)
+        print(f"Image saved as {config.output_path}")
 
 
 if __name__ == "__main__":
