@@ -118,8 +118,8 @@ class Config:
 def main():
     config = Config.from_file(CONFIG_PATH)
     bounds = config.map_bounds
-    width_in_blocks = bounds.bottomright.x - bounds.topleft.x + 1
-    height_in_blocks = bounds.bottomright.z - bounds.topleft.z + 1
+    width_in_blocks = bounds.bottomright.x - bounds.topleft.x
+    height_in_blocks = bounds.bottomright.z - bounds.topleft.z
     image = Image.new("RGB", (width_in_blocks, height_in_blocks))
 
     conn = sqlite3.connect(config.db_path)
