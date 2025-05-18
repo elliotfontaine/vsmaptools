@@ -125,12 +125,12 @@ def main():
     conn = sqlite3.connect(config.db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT position, data FROM mappiece")
-
     map_pieces = [MapPiece(pos, data) for pos, data in cursor]
-    conn.close()
     print(f"Loaded {len(map_pieces)} map pieces from the database.")
-    map_pieces = [chunk for chunk in map_pieces if chunk.get_block_position().in_bounds(bounds.topleft, bounds.bottomright)]
-    print(f"Filtered out of bounds map pieces, {len(map_pieces)} chunks remaining.")
+    conn.close()
+    
+    map_pieces = [piece for piece in map_pieces if piece.get_block_position().in_bounds(bounds.topleft, bounds.bottomright)]
+    print(f"Filtered out of bounds map pieces, {len(map_pieces)} pieces remaining.")
 
     with ProcessPoolExecutor() as executor:
         for idx, (map_piece, piece_image) in enumerate(zip(map_pieces, executor.map(methodcaller("render"), map_pieces))):
