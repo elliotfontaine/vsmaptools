@@ -58,4 +58,4 @@ python3 vsmaptools.py
 The image will be generated at the path specified in `config.json`.
 
 ## License
-This project is licensed under the MIT License. See `LICENSE.md` for details.
+This project is licensed under the MIT License. See `LICENSE` for details.
