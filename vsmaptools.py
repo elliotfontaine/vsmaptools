@@ -98,26 +98,47 @@ class Config:
         with config_path.open("r", encoding="utf-8") as f:
             config = json.load(f)
 
-        cls._validate_config_dict(config)
+        cls._validate(config)
+
+        if config.get("use_relative_coord"):
+            min_x = config["spawn_abs_x"] + config["min_x"]
+            max_x = config["spawn_abs_x"] + config["max_x"]
+            min_z = config["spawn_abs_z"] + config["min_z"]
+            max_z = config["spawn_abs_z"] + config["max_z"]
+        else:
+            min_x = config["min_x"]
+            max_x = config["max_x"]
+            min_z = config["min_z"]
+            max_z = config["max_z"]
 
         return cls(
             db_path=Path(config["map_file"]),
             output_path=Path(config["output"]),
             map_bounds=MapBounds(
-                topleft=BlockPosition(config["min_x"], config["min_z"]),
-                bottomright=BlockPosition(config["max_x"], config["max_z"]),
+                topleft=BlockPosition(min_x, min_z),
+                bottomright=BlockPosition(max_x, max_z),
             )
         )
 
     @staticmethod
-    def _validate_config_dict(config: dict) -> None:
-        required_keys = {"map_file", "output", "min_x", "max_x", "min_z", "max_z"}
+    def _validate(config: dict) -> None:
+        required_keys = {
+            "map_file", "output", "min_x", "max_x", "min_z", "max_z",
+            "use_relative_coord", "spawn_abs_x", "spawn_abs_z"
+        }
         missing = required_keys - config.keys()
         if missing:
             raise KeyError(f"Missing keys in config: {', '.join(missing)}")
+        
+        if config["use_relative_coord"]:
+            if config["spawn_abs_x"] < 0 or config["spawn_abs_z"] < 0:
+                raise ValueError("Spawn absolute coordinates must be non-negative.")
+        else:
+            if any(coord < 0 for coord in (config["min_x"], config["max_x"], config["min_z"], config["max_z"])):
+                raise ValueError("Coordinates must be non-negative when using absolute coordinates.")
 
-        if config["min_x"] > config["max_x"] or config["min_z"] > config["max_z"]:
-            raise ValueError("Invalid map bounds: min_x <= max_x and min_z <= max_z required")
+        if config["min_x"] >= config["max_x"] or config["min_z"] >= config["max_z"]:
+            raise ValueError("Invalid map bounds: min_x < max_x and min_z < max_z required")
 
         if not Path(config["map_file"]).is_file():
             raise FileNotFoundError(f"Worldmap database file not found: {config['map_file']}")

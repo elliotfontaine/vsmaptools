@@ -1,8 +1,11 @@
 {
   "map_file": "17036cd4-fd1c-4c2b-87ff-5c5e3fe6eee7.db",
   "output": "vs_worldmap.png",
-  "min_x": 511000,
-  "max_x": 513000,
-  "min_z": 511000,
-  "max_z": 513000
+  "min_x": -1000,
+  "max_x": 1000,
+  "min_z": -1000,
+  "max_z": 1000,
+  "use_relative_coord": true,
+  "spawn_abs_x": 512000,
+  "spawn_abs_z": 512000
 }

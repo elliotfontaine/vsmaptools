@@ -1,6 +1,6 @@
 # 🗺️ VS Map Renderer
 
-**VS Map Renderer** reads color values from your [Vintage Story](https://www.vintagestory.at/) client-side minimap data and exports them as a PNG image file.   You can specify a rectangular area to export using coordinate bounds.
+**VS Map Renderer** reads color values from your [Vintage Story](https://www.vintagestory.at/) client-side minimap data and exports them as a PNG image file. You can specify a rectangular area to export, using coordinate bounds.
 
 The output image is **pixel-perfect**: each block in the game corresponds exactly to one pixel in the image, with no scaling or interpolation.
 
@@ -35,20 +35,26 @@ The tool uses a JSON configuration file specifying the input minimap database, o
 {
   "map_file": "17036cd4-fd1c-4c2b-87ff-5c5e3fe6eee7.db",
   "output": "vs_worldmap.png",
-  "min_x": 511000,
-  "max_x": 513000,
-  "min_z": 511000,
-  "max_z": 513000
+  "min_x": -1000,
+  "max_x": 1000,
+  "min_z": -1000,
+  "max_z": 1000,
+  "use_relative_coord": true,
+  "spawn_abs_x": 512000,
+  "spawn_abs_z": 512000
 }
 ```
-* `map_file`: Path to your `.db` minimap file.
-* `output`: Path/filename for the exported PNG image.
-* `min_x`, `max_x`: X-coordinate range of the region to export.
-* `min_z`, `max_z`: Z-coordinate range of the region to export.
+* **`map_file`**: Path to your minimap file.
+* **`output`**: Path/filename for the exported PNG image.
+* **`min_x`, `max_x`**: X-coordinate range of the region to export.
+* **`min_z`, `max_z`**: Z-coordinate range of the region to export.
+* **`use_relative_coord`**: If true, the coordinate bounds are interpreted relative to the player's spawn location. In that case, `spawn_x` and `spawn_z` must be provided.
+* **`spawn_x`, `spawn_z`**: Absolute coordinates of the player's spawn point. Only processed if `use_relative_coord` is true.
 
-**Coordinates:** For now, the tool uses Vintage Story [absolute coordinates](https://wiki.vintagestory.at/Coordinates). While in-game, write `.cp aposi` in chat to copy the current absolute position of your character to the clipboard. Do that at the top-left and bottom-right bounds you want to render.
+**Coordinates:** Vintage Story uses [two coordinates systems](https://wiki.vintagestory.at/Coordinates), absolute and relative to spawnpoint. While in-game, use the `.cp aposi` command in chat to copy your current *absolute* position to the clipboard. Do that at the top-left and bottom-right bounds you want to render (or at your spawn point, if using relative coordinates).  
+The default spawn point is located at the center of the world. For example, in a 1M-wide world, the center is at `x=512000; z=512000`.
 
-**Minimap files:** Map `.db` files are stored in the [VintagestoryData/Maps folder](https://wiki.vintagestory.at/VintagestoryData_folder) of your game. You might want to copy the file to the directory of `vsmaptools.py`, to prevent any issue (you never know!)
+**Minimap files:** Map `.db` files are stored in the [VintagestoryData/Maps](https://wiki.vintagestory.at/VintagestoryData_folder) folder of your game. For convenience (and to avoid any risk of file corruption), you may want to copy the map file into the directory where you're running `vsmaptools.py`.
 
 ## Usage
 Run the script from the command-line with Python:
