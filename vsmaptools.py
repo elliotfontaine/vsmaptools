@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 vsmaptools.py
-Version 1.0.0
+Version 1.1.0
 Tool to read Vintage Story map database and export as PNG.
 """
 
@@ -16,7 +16,7 @@ from typing import List, NamedTuple
 import betterproto
 from PIL import Image
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 # Constants
 CONFIG_PATH = Path("config.json")
