@@ -22,7 +22,6 @@ __version__ = "1.0.0"
 CONFIG_PATH = Path("config.json")
 CHUNK_WIDTH: int = 32
 
-
 @dataclass
 class BlockPosition:
     x: int = 0
@@ -88,6 +87,7 @@ class MapPiece:
 class Config:
     db_path: Path
     output_path: Path
+    whole_map: bool
     map_bounds: MapBounds
 
     @classmethod
@@ -114,6 +114,7 @@ class Config:
         return cls(
             db_path=Path(config["map_file"]),
             output_path=Path(config["output"]),
+            whole_map=config["whole_map"],
             map_bounds=MapBounds(
                 topleft=BlockPosition(min_x, min_z),
                 bottomright=BlockPosition(max_x, max_z),
@@ -123,7 +124,8 @@ class Config:
     @staticmethod
     def _validate(config: dict) -> None:
         required_keys = {
-            "map_file", "output", "min_x", "max_x", "min_z", "max_z",
+            "map_file", "output", "whole_map",
+            "min_x", "max_x", "min_z", "max_z",
             "use_relative_coord", "spawn_abs_x", "spawn_abs_z"
         }
         missing = required_keys - config.keys()
@@ -146,10 +148,6 @@ class Config:
 
 def main():
     config = Config.from_file(CONFIG_PATH)
-    bounds = config.map_bounds
-    width_in_blocks = bounds.bottomright.x - bounds.topleft.x
-    height_in_blocks = bounds.bottomright.z - bounds.topleft.z
-    image = Image.new("RGB", (width_in_blocks, height_in_blocks))
 
     conn = sqlite3.connect(config.db_path)
     cursor = conn.cursor()
@@ -157,9 +155,26 @@ def main():
     map_pieces = [MapPiece(pos, data) for pos, data in cursor]
     print(f"Loaded {len(map_pieces)} map pieces from the database.")
     conn.close()
-    
-    map_pieces = [piece for piece in map_pieces if piece.get_block_position().in_bounds(bounds.topleft, bounds.bottomright)]
-    print(f"Filtered out of bounds map pieces, {len(map_pieces)} pieces remaining.")
+
+    bounds, image = None, None
+    if config.whole_map:
+        xs = [piece.get_block_position().x for piece in map_pieces]
+        zs = [piece.get_block_position().z for piece in map_pieces]
+        min_x, max_x = min(xs), max(xs) + CHUNK_WIDTH
+        min_z, max_z = min(zs), max(zs) + CHUNK_WIDTH
+        bounds = MapBounds(
+            topleft=BlockPosition(min_x, min_z),
+            bottomright=BlockPosition(max_x, max_z)
+        )
+        image = Image.new("RGB", (max_x - min_x, max_z - min_z))
+        print(f"Calculated whole map bounds: {bounds}")
+    else:
+        bounds = config.map_bounds
+        width_in_blocks = bounds.bottomright.x - bounds.topleft.x
+        height_in_blocks = bounds.bottomright.z - bounds.topleft.z
+        image = Image.new("RGB", (width_in_blocks, height_in_blocks))
+        map_pieces = [piece for piece in map_pieces if piece.get_block_position().in_bounds(bounds.topleft, bounds.bottomright)]
+        print(f"Filtered out of bounds map pieces, {len(map_pieces)} pieces remaining.")
 
     with ProcessPoolExecutor() as executor:
         for idx, (map_piece, piece_image) in enumerate(zip(map_pieces, executor.map(methodcaller("render"), map_pieces))):
@@ -169,6 +184,7 @@ def main():
             pixel_x = blockpos.x - bounds.topleft.x
             pixel_z = blockpos.z - bounds.topleft.z
             image.paste(piece_image, (pixel_x, pixel_z))
+    print(f"Processed {len(map_pieces)} map pieces. Done.")
 
     image.save(config.output_path)
     print(f"Image saved as {config.output_path}")

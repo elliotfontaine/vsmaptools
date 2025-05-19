@@ -1,12 +1,14 @@
 # 🗺️ VS Map Renderer
 
-**VS Map Renderer** reads color values from your [Vintage Story](https://www.vintagestory.at/) client-side minimap data and exports them as a PNG image file. You can specify a rectangular area to export, using coordinate bounds.
+**VS Map Renderer** is a tool that reads color data from your [Vintage Story](https://www.vintagestory.at/) client-side minimap, and exports it as a high-resolution PNG image. You can choose to render a specific region using coordinate bounds, or export the **entire explored world**.
 
-The output image is **pixel-perfect**: each block in the game corresponds exactly to one pixel in the image, with no scaling or interpolation.
+The output is **pixel-perfect**: each block in the game is mapped to exactly one pixel in the image. **No scaling, no blurring, no interpolation**.
 
-Unlike [Vintage Story Map Exporter](https://mods.vintagestory.at/vsdbtopng), this tool is:
-- **Multi-platform** (runs on Linux, macOS, and Windows)
-- **Not limited** to 10,000×10,000 pixels
+Compared to [Vintage Story Map Exporter](https://mods.vintagestory.at/vsdbtopng), this tool is:
+* 💻 **Cross-platform** (runs on Linux, macOS, and Windows)
+* 📏 **Not limited** to 10,000×10,000 pixels
+* 🌍 **Can render the whole explored map automatically**, no manual bounds needed
+* 🧭 **Supports relative coordinates** (the ones you see in-game)
 
 ## Preview
 ![Preview of exported map](images/3k_3k_map.png)
@@ -35,6 +37,7 @@ The tool uses a JSON configuration file specifying the input minimap database, o
 {
   "map_file": "17036cd4-fd1c-4c2b-87ff-5c5e3fe6eee7.db",
   "output": "vs_worldmap.png",
+  "whole_map": true,
   "min_x": -1000,
   "max_x": 1000,
   "min_z": -1000,
@@ -46,6 +49,7 @@ The tool uses a JSON configuration file specifying the input minimap database, o
 ```
 * **`map_file`**: Path to your minimap file.
 * **`output`**: Path/filename for the exported PNG image.
+* **`whole_map`**: If true, exports the entire map area covered by existing chunks in the minimap database. When enabled, all coordinate-related fields below are ignored.
 * **`min_x`, `max_x`**: X-coordinate range of the region to export.
 * **`min_z`, `max_z`**: Z-coordinate range of the region to export.
 * **`use_relative_coord`**: If true, the coordinate bounds are interpreted relative to the player's spawn location. In that case, `spawn_x` and `spawn_z` must be provided.
