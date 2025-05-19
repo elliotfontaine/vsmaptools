@@ -12,7 +12,7 @@ Compared to [Vintage Story Map Exporter](https://mods.vintagestory.at/vsdbtopng)
 
 ## Preview
 ![Preview of exported map](images/3k_3k_map.png)
-*Map colors are from the [Medieval Map](https://mods.vintagestory.at/medievalmap) mod.*
+*Map colors are from the [Medieval Map](https://mods.vintagestory.at/marximusmedievalmap) mod.*
 
 ## Installation
 This project requires Python 3.7 or higher.
