@@ -27,8 +27,9 @@ class BlockPosition:
     x: int = 0
     z: int = 0
 
-    def in_bounds(self, topleft: "BlockPosition", bottomright: "BlockPosition") -> bool:
-        return topleft.x <= self.x <= bottomright.x and topleft.z <= self.z <= bottomright.z
+    def chunk_intersects_bounds(self, topleft: "BlockPosition", bottomright: "BlockPosition") -> bool:
+        return (self.x < bottomright.x and self.x + CHUNK_WIDTH > topleft.x) and \
+               (self.z < bottomright.z and self.z + CHUNK_WIDTH > topleft.z)
 
 
 class MapBounds(NamedTuple):
@@ -173,7 +174,7 @@ def main():
         width_in_blocks = bounds.bottomright.x - bounds.topleft.x
         height_in_blocks = bounds.bottomright.z - bounds.topleft.z
         image = Image.new("RGB", (width_in_blocks, height_in_blocks))
-        map_pieces = [piece for piece in map_pieces if piece.get_block_position().in_bounds(bounds.topleft, bounds.bottomright)]
+        map_pieces = [piece for piece in map_pieces if piece.get_block_position().chunk_intersects_bounds(bounds.topleft, bounds.bottomright)]
         print(f"Filtered out of bounds map pieces, {len(map_pieces)} pieces remaining.")
 
     with ProcessPoolExecutor() as executor:
