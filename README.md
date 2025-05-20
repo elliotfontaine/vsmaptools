@@ -10,8 +10,9 @@ Compared to [Vintage Story Map Exporter](https://mods.vintagestory.at/vsdbtopng)
 * 🌍 **Can render the whole explored map automatically**, no manual bounds needed
 * 🧭 **Supports relative coordinates** (the ones you see in-game)
 
-## Preview
-![Preview of exported map](images/3k_3k_map.png)
+## Preview 
+![Preview of exported map](images/5k_5k_map.png)
+5,000×5,000 blocks  
 *Map colors are from the [Medieval Map](https://mods.vintagestory.at/marximusmedievalmap) mod.*
 
 ## Installation
