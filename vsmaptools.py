@@ -28,14 +28,10 @@ class BlockPosition:
     x: int = 0
     z: int = 0
 
-    def chunk_intersects_bounds(self, topleft: "BlockPosition", bottomright: "BlockPosition") -> bool:
-        return (self.x < bottomright.x and self.x + CHUNK_WIDTH > topleft.x) and \
-               (self.z < bottomright.z and self.z + CHUNK_WIDTH > topleft.z)
-
 
 class MapBounds(NamedTuple):
-    topleft: BlockPosition
-    bottomright: BlockPosition
+    top_left: BlockPosition
+    bottom_right: BlockPosition
 
 
 class Color(NamedTuple):
@@ -62,16 +58,26 @@ class MapPiecePixelsMessage(betterproto.Message):
     pixels: List[int] = betterproto.int32_field(1)
 
 
-@dataclass
 class MapPiece:
-    chunk_position: int # encoded
-    pixels_blob: bytes # protobuf encoded
+    top_left: BlockPosition
+    pixels_blob: bytes  # protobuf encoded
 
-    def get_block_position(self) -> BlockPosition:
-        chunk_x = (self.chunk_position & ((1 << 21) - 1))  # bits 0–20
-        chunk_z = (self.chunk_position >> 27) & ((1 << 21) - 1)  # bits 28–49
+    def __init__(self, chunk_position: int, pixels_blob: bytes):
+        self.top_left = self._chunk_to_block_position(chunk_position)
+        self.pixels_blob = pixels_blob
+
+    @staticmethod
+    def _chunk_to_block_position(chunk_position: int) -> BlockPosition:
+        chunk_x = chunk_position & ((1 << 21) - 1)  # bits 0–20
+        chunk_z = (chunk_position >> 27) & ((1 << 21) - 1)  # bits 28–49
         return BlockPosition(chunk_x * CHUNK_WIDTH, chunk_z * CHUNK_WIDTH)
-    
+
+    def intersects_bounds(self, bounds: MapBounds) -> bool:
+        x, z = self.top_left.x, self.top_left.z
+        return (x < bounds.bottom_right.x and x + CHUNK_WIDTH > bounds.top_left.x) and (
+            z < bounds.bottom_right.z and z + CHUNK_WIDTH > bounds.top_left.z
+        )
+
     def decode_pixels(self) -> List[Color]:
         pixels: List[int] = MapPiecePixelsMessage().parse(self.pixels_blob).pixels
         return [Color.from_int32(pixel) for pixel in pixels]
@@ -115,9 +121,9 @@ class Config:
             output_path=Path(config["output"]),
             whole_map=config["whole_map"],
             map_bounds=MapBounds(
-                topleft=BlockPosition(min_x, min_z),
-                bottomright=BlockPosition(max_x, max_z),
-            )
+                top_left=BlockPosition(min_x, min_z),
+                bottom_right=BlockPosition(max_x, max_z),
+            ),
         )
 
     @staticmethod
@@ -178,22 +184,22 @@ def main():
 
     bounds, image = None, None
     if config.whole_map:
-        xs = [piece.get_block_position().x for piece in map_pieces]
-        zs = [piece.get_block_position().z for piece in map_pieces]
+        xs = [piece.top_left.x for piece in map_pieces]
+        zs = [piece.top_left.z for piece in map_pieces]
         min_x, max_x = min(xs), max(xs) + CHUNK_WIDTH
         min_z, max_z = min(zs), max(zs) + CHUNK_WIDTH
         bounds = MapBounds(
-            topleft=BlockPosition(min_x, min_z),
-            bottomright=BlockPosition(max_x, max_z)
+            top_left=BlockPosition(min_x, min_z),
+            bottom_right=BlockPosition(max_x, max_z),
         )
         image = Image.new("RGB", (max_x - min_x, max_z - min_z))
         print(f"Calculated whole map bounds: {bounds}")
     else:
         bounds = config.map_bounds
-        width_in_blocks = bounds.bottomright.x - bounds.topleft.x
-        height_in_blocks = bounds.bottomright.z - bounds.topleft.z
+        width_in_blocks = bounds.bottom_right.x - bounds.top_left.x
+        height_in_blocks = bounds.bottom_right.z - bounds.top_left.z
         image = Image.new("RGB", (width_in_blocks, height_in_blocks))
-        map_pieces = [piece for piece in map_pieces if piece.get_block_position().chunk_intersects_bounds(bounds.topleft, bounds.bottomright)]
+        map_pieces = [piece for piece in map_pieces if piece.intersects_bounds(bounds)]
         print(f"Filtered out of bounds map pieces, {len(map_pieces)} pieces remaining.")
 
     with ProcessPoolExecutor() as executor:
@@ -202,9 +208,8 @@ def main():
         ):
             if idx % 100 == 0:
                 print(f"Processed {idx} map pieces...")
-            blockpos = map_piece.get_block_position()
-            pixel_x = blockpos.x - bounds.topleft.x
-            pixel_z = blockpos.z - bounds.topleft.z
+            pixel_x = map_piece.top_left.x - bounds.top_left.x
+            pixel_z = map_piece.top_left.z - bounds.top_left.z
             image.paste(piece_image, (pixel_x, pixel_z))
     print(f"Processed {len(map_pieces)} map pieces. Done.")
 
