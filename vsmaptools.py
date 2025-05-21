@@ -7,6 +7,7 @@ Tool to read Vintage Story map database and export as PNG.
 
 import json
 import sqlite3
+from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from operator import methodcaller
@@ -243,21 +244,30 @@ def main():
     print(f"Image saved as {config.output_path}")
 
 
-if __name__ == "__main__":
+def profiled_main():
+    import cProfile  # pylint: disable=import-outside-toplevel
+    import pstats  # pylint: disable=import-outside-toplevel
+    import io  # pylint: disable=import-outside-toplevel
+
+    pr = cProfile.Profile()
+    pr.enable()
     main()
+    pr.disable()
+
+    s = io.StringIO()
+    ps = pstats.Stats(pr, stream=s).strip_dirs().sort_stats("cumtime")
+    ps.print_stats(30)
+    print(s.getvalue())
 
 
-# if __name__ == "__main__":
-#     import cProfile
-#     import pstats
-#     import io
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--profile", action="store_true", help="Enable profiling with cProfile"
+    )
+    args = parser.parse_args()
 
-#     pr = cProfile.Profile()
-#     pr.enable()
-#     main()
-#     pr.disable()
-
-#     s = io.StringIO()
-#     ps = pstats.Stats(pr, stream=s).strip_dirs().sort_stats("cumtime")
-#     ps.print_stats(30)
-#     print(s.getvalue())
+    if args.profile:
+        profiled_main()
+    else:
+        main()
