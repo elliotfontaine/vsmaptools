@@ -15,7 +15,7 @@ Compared to [Vintage Story Map Exporter](https://mods.vintagestory.at/vsdbtopng)
 
 <p align="center"><img src="img/terminal_output.gif?raw=true" width="500"/></p>
 
-<p align="center"><img src="img/5k_5k_map.png" alt="Preview of exported map" width="500"/></p>
+<p align="center"><img src="img/5k_5k_map.png" alt="Preview of exported map"/></p>
 
 5,000×5,000 blocks  
 _Map colors are from the [Medieval Map](https://mods.vintagestory.at/marximusmedievalmap) mod._
