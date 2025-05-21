@@ -40,6 +40,14 @@ class MapBounds(NamedTuple):
     top_left: BlockPosition
     bottom_right: BlockPosition
 
+    @property
+    def width(self) -> int:
+        return self.bottom_right.x - self.top_left.x
+
+    @property
+    def height(self) -> int:
+        return self.bottom_right.z - self.top_left.z
+
 
 class Color(NamedTuple):
     """A single RGB color, extracted from the minimap pixel data."""
@@ -207,25 +215,22 @@ def main():
     if config.whole_map:
         xs = [piece.top_left.x for piece in map_pieces]
         zs = [piece.top_left.z for piece in map_pieces]
-        min_x, max_x = min(xs), max(xs) + CHUNK_WIDTH
-        min_z, max_z = min(zs), max(zs) + CHUNK_WIDTH
         bounds = MapBounds(
-            top_left=BlockPosition(min_x, min_z),
-            bottom_right=BlockPosition(max_x, max_z),
+            top_left=BlockPosition(min(xs), min(zs)),
+            bottom_right=BlockPosition(max(xs) + CHUNK_WIDTH, max(zs) + CHUNK_WIDTH),
         )
-        image = Image.new("RGB", (max_x - min_x, max_z - min_z))
+        image = Image.new("RGB", (bounds.width, bounds.height))
         print(f"Calculated whole map bounds: {bounds}")
     else:
         bounds = config.map_bounds
-        width_in_blocks = bounds.bottom_right.x - bounds.top_left.x
-        height_in_blocks = bounds.bottom_right.z - bounds.top_left.z
-        image = Image.new("RGB", (width_in_blocks, height_in_blocks))
+        image = Image.new("RGB", (bounds.width, bounds.height))
         map_pieces = [piece for piece in map_pieces if piece.intersects_bounds(bounds)]
         print(f"Filtered out of bounds map pieces, {len(map_pieces)} pieces remaining.")
 
     with ProcessPoolExecutor() as executor:
+        rendered_images = executor.map(methodcaller("render"), map_pieces)
         for idx, (map_piece, piece_image) in enumerate(
-            zip(map_pieces, executor.map(methodcaller("render"), map_pieces))
+            zip(map_pieces, rendered_images)
         ):
             if idx % 100 == 0:
                 print(f"Processed {idx} map pieces...")
