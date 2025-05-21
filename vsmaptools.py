@@ -7,15 +7,19 @@ Tool to read Vintage Story map database and export as PNG.
 
 import json
 import sqlite3
+import sys
+import time
 from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from operator import methodcaller
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import Generator, Iterable, List, NamedTuple, Optional, Sized, TypeVar, cast
 
 import betterproto
 from PIL import Image
+
+T = TypeVar("T")
 
 __version__ = "1.1.0"
 
@@ -201,14 +205,69 @@ class Config:
             )
 
 
-def main():
+def simple_progress_bar(
+    iterable: Iterable[T],
+    total: Optional[int] = None,
+    bar_length: int = 20,
+    min_interval: float = 0.1,
+) -> Generator[T, None, None]:
+    """
+    A simple progress bar generator that yields items from an iterable
+    while displaying a progress bar on the console.
+
+    Args:
+        iterable (Iterable[T]): The iterable to wrap with a progress bar.
+        total (Optional[int], optional): Total number of items. If None,
+            tries to infer length from the iterable. Defaults to None.
+        bar_length (int, optional): The length of the progress bar in characters.
+            Defaults to 20.
+        min_interval (float, optional): Minimum seconds between updates to reduce overhead.
+            Defaults to 0.1.
+
+    Yields:
+        T: Items from the original iterable.
+    """
+    if total is None:
+        if hasattr(iterable, "__len__"):
+            total = len(cast(Sized, iterable))
+        else:
+            total = None
+
+    last_update = 0.0
+    if total is None:
+        for i, item in enumerate(iterable, 1):
+            now = time.monotonic()
+            if now - last_update > min_interval:
+                sys.stdout.write(f"\rProcessed {i} items")
+                sys.stdout.flush()
+                last_update = now
+            yield item
+        print()
+    else:
+        for i, item in enumerate(iterable, 1):
+            now = time.monotonic()
+            if now - last_update > min_interval or i == total:
+                percent = i / total
+                filled_length = int(bar_length * percent)
+                progress_bar = "=" * filled_length + "-" * (bar_length - filled_length)
+                sys.stdout.write(
+                    f"\r[{progress_bar}] {percent*100:3.0f}% ({i}/{total})"
+                )
+                sys.stdout.flush()
+                last_update = now
+            yield item
+        print()
+
+
+def main() -> None:
     config = Config.from_file(CONFIG_PATH)
 
+    print(f"Loading map pieces from {config.db_path}")
     conn = sqlite3.connect(config.db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT position, data FROM mappiece")
     map_pieces = [MapPiece(pos, data) for pos, data in cursor]
-    print(f"Loaded {len(map_pieces)} map pieces from the database.")
+    print(f"{len(map_pieces)} map pieces loaded from the database.")
     conn.close()
 
     bounds, image = None, None
@@ -221,30 +280,29 @@ def main():
             bottom_right=BlockPosition(max(xs) + CHUNK_WIDTH, max(zs) + CHUNK_WIDTH),
         )
         image = Image.new("RGB", (bounds.width, bounds.height))
-        print(f"Calculated whole map bounds: {bounds}")
+        print(f"Calculated whole map bounds: {bounds.top_left} - {bounds.bottom_right}")
     else:
         bounds = config.map_bounds
         image = Image.new("RGB", (bounds.width, bounds.height))
         map_pieces = [piece for piece in map_pieces if piece.intersects_bounds(bounds)]
         print(f"Filtered out of bounds map pieces, {len(map_pieces)} pieces remaining.")
+    print(f"Image size: {bounds.width} x {bounds.height}")
 
     with ProcessPoolExecutor() as executor:
         rendered_images = executor.map(methodcaller("render"), map_pieces)
-        for idx, (map_piece, piece_image) in enumerate(
-            zip(map_pieces, rendered_images)
+        for map_piece, piece_image in simple_progress_bar(
+            zip(map_pieces, rendered_images), total=len(map_pieces)
         ):
-            if idx % 100 == 0:
-                print(f"Processed {idx} map pieces...")
             pixel_x = map_piece.top_left.x - bounds.top_left.x
             pixel_z = map_piece.top_left.z - bounds.top_left.z
             image.paste(piece_image, (pixel_x, pixel_z))
-    print(f"Processed {len(map_pieces)} map pieces. Done.")
+    print(f"Processed {len(map_pieces)} map pieces.")
 
     image.save(config.output_path)
     print(f"Image saved as {config.output_path}")
 
 
-def profiled_main():
+def profiled_main() -> None:
     import cProfile  # pylint: disable=import-outside-toplevel
     import pstats  # pylint: disable=import-outside-toplevel
     import io  # pylint: disable=import-outside-toplevel
