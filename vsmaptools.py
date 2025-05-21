@@ -25,16 +25,25 @@ CHUNK_WIDTH: int = 32
 
 @dataclass
 class BlockPosition:
+    """An absolute block position on the world map."""
+
     x: int = 0
     z: int = 0
 
 
 class MapBounds(NamedTuple):
+    """2D rectangular bounds defining a region to render on the world map.
+
+    The bounds are expressed in absolute block coordinates on the XZ-plane.
+    They define the minimum and maximum corners of the rectangle (inclusive)."""
+
     top_left: BlockPosition
     bottom_right: BlockPosition
 
 
 class Color(NamedTuple):
+    """A single RGB color, extracted from the minimap pixel data."""
+
     r: int
     g: int
     b: int
@@ -46,9 +55,9 @@ class Color(NamedTuple):
 
 @dataclass
 class MapPiecePixelsMessage(betterproto.Message):
-    """
-    Protobuf message used by Vintage Story to store pixel colors of map pieces.
-    https://github.com/bluelightning32/vs-proto/blob/main/schema-1.19.8.proto#L70
+    """Protobuf message wrapper for map piece pixel data.
+
+    See: https://github.com/bluelightning32/vs-proto/blob/main/schema-1.19.8.proto#L70
 
     The 'pixels' field is a list of 32-bit integers, encoded by protobuf.
     Each integer encodes a pixel color using Vintage Story's custom color format,
@@ -59,10 +68,16 @@ class MapPiecePixelsMessage(betterproto.Message):
 
 
 class MapPiece:
+    """A minimap piece (chunk) containing pixel data and metadata.
+
+    Each map piece represents a 32x32 block section of the world, stored in the
+    player's minimap database.
+    """
+
     top_left: BlockPosition
     pixels_blob: bytes  # protobuf encoded
 
-    def __init__(self, chunk_position: int, pixels_blob: bytes):
+    def __init__(self, chunk_position: int, pixels_blob: bytes) -> None:
         self.top_left = self._chunk_to_block_position(chunk_position)
         self.pixels_blob = pixels_blob
 
@@ -90,6 +105,11 @@ class MapPiece:
 
 @dataclass
 class Config:
+    """Configuration state for VSMapTools.
+
+    Reads and validates rendering parameters from a JSON configuration file.
+    """
+
     db_path: Path
     output_path: Path
     whole_map: bool
@@ -183,6 +203,7 @@ def main():
     conn.close()
 
     bounds, image = None, None
+
     if config.whole_map:
         xs = [piece.top_left.x for piece in map_pieces]
         zs = [piece.top_left.z for piece in map_pieces]
