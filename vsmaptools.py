@@ -22,6 +22,7 @@ __version__ = "1.1.0"
 CONFIG_PATH = Path("config.json")
 CHUNK_WIDTH: int = 32
 
+
 @dataclass
 class BlockPosition:
     x: int = 0
@@ -44,23 +45,20 @@ class Color(NamedTuple):
 
     @classmethod
     def from_int32(cls, value: int) -> "Color":
-        return cls(
-            r=value & 0xFF,
-            g=(value >> 8) & 0xFF,
-            b=(value >> 16) & 0xFF
-        )
+        return cls(r=value & 0xFF, g=(value >> 8) & 0xFF, b=(value >> 16) & 0xFF)
 
 
 @dataclass
 class MapPiecePixelsMessage(betterproto.Message):
     """
-    Protobuf message used by Vintage Story to store pixel colors of map pieces.  
+    Protobuf message used by Vintage Story to store pixel colors of map pieces.
     https://github.com/bluelightning32/vs-proto/blob/main/schema-1.19.8.proto#L70
 
-    The 'pixels' field is a list of 32-bit integers, encoded by protobuf.  
-    Each integer encodes a pixel color using Vintage Story's custom color format,  
+    The 'pixels' field is a list of 32-bit integers, encoded by protobuf.
+    Each integer encodes a pixel color using Vintage Story's custom color format,
     with pixels stored in row-major order.
     """
+
     pixels: List[int] = betterproto.int32_field(1)
 
 
@@ -77,7 +75,7 @@ class MapPiece:
     def decode_pixels(self) -> List[Color]:
         pixels: List[int] = MapPiecePixelsMessage().parse(self.pixels_blob).pixels
         return [Color.from_int32(pixel) for pixel in pixels]
-    
+
     def render(self) -> Image.Image:
         img = Image.new("RGB", (CHUNK_WIDTH, CHUNK_WIDTH))
         img.putdata(self.decode_pixels())
@@ -125,26 +123,47 @@ class Config:
     @staticmethod
     def _validate(config: dict) -> None:
         required_keys = {
-            "map_file", "output", "whole_map",
-            "min_x", "max_x", "min_z", "max_z",
-            "use_relative_coord", "spawn_abs_x", "spawn_abs_z"
+            "map_file",
+            "output",
+            "whole_map",
+            "min_x",
+            "max_x",
+            "min_z",
+            "max_z",
+            "use_relative_coord",
+            "spawn_abs_x",
+            "spawn_abs_z",
         }
         missing = required_keys - config.keys()
         if missing:
             raise KeyError(f"Missing keys in config: {', '.join(missing)}")
-        
+
         if config["use_relative_coord"]:
             if config["spawn_abs_x"] < 0 or config["spawn_abs_z"] < 0:
                 raise ValueError("Spawn absolute coordinates must be non-negative.")
         else:
-            if any(coord < 0 for coord in (config["min_x"], config["max_x"], config["min_z"], config["max_z"])):
-                raise ValueError("Coordinates must be non-negative when using absolute coordinates.")
+            if any(
+                coord < 0
+                for coord in (
+                    config["min_x"],
+                    config["max_x"],
+                    config["min_z"],
+                    config["max_z"],
+                )
+            ):
+                raise ValueError(
+                    "Coordinates must be non-negative when using absolute coordinates."
+                )
 
         if config["min_x"] >= config["max_x"] or config["min_z"] >= config["max_z"]:
-            raise ValueError("Invalid map bounds: min_x < max_x and min_z < max_z required")
+            raise ValueError(
+                "Invalid map bounds: min_x < max_x and min_z < max_z required"
+            )
 
         if not Path(config["map_file"]).is_file():
-            raise FileNotFoundError(f"Worldmap database file not found: {config['map_file']}")
+            raise FileNotFoundError(
+                f"Worldmap database file not found: {config['map_file']}"
+            )
 
 
 def main():
@@ -178,7 +197,9 @@ def main():
         print(f"Filtered out of bounds map pieces, {len(map_pieces)} pieces remaining.")
 
     with ProcessPoolExecutor() as executor:
-        for idx, (map_piece, piece_image) in enumerate(zip(map_pieces, executor.map(methodcaller("render"), map_pieces))):
+        for idx, (map_piece, piece_image) in enumerate(
+            zip(map_pieces, executor.map(methodcaller("render"), map_pieces))
+        ):
             if idx % 100 == 0:
                 print(f"Processed {idx} map pieces...")
             blockpos = map_piece.get_block_position()
@@ -209,5 +230,3 @@ if __name__ == "__main__":
 #     ps = pstats.Stats(pr, stream=s).strip_dirs().sort_stats("cumtime")
 #     ps.print_stats(30)
 #     print(s.getvalue())
-
-
