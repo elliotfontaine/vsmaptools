@@ -227,36 +227,35 @@ def simple_progress_bar(
     Yields:
         T: Items from the original iterable.
     """
-    if total is None:
-        if hasattr(iterable, "__len__"):
-            total = len(cast(Sized, iterable))
-        else:
-            total = None
+
+    def print_unbounded(i: int) -> None:
+        sys.stdout.write(f"\rProcessed {i} items")
+        sys.stdout.flush()
+
+    def print_bounded(i: int, total: int) -> None:
+        percent = i / total
+        filled_length = int(bar_length * percent)
+        progress_bar = "=" * filled_length + "-" * (bar_length - filled_length)
+        sys.stdout.write(f"\r[{progress_bar}] {percent*100:3.0f}% ({i}/{total})")
+        sys.stdout.flush()
+
+    if total is None and hasattr(iterable, "__len__"):
+        total = len(cast(Sized, iterable))
 
     last_update = 0.0
-    if total is None:
-        for i, item in enumerate(iterable, 1):
-            now = time.monotonic()
-            if now - last_update > min_interval:
-                sys.stdout.write(f"\rProcessed {i} items")
-                sys.stdout.flush()
-                last_update = now
-            yield item
-        print()
-    else:
-        for i, item in enumerate(iterable, 1):
-            now = time.monotonic()
-            if now - last_update > min_interval or i == total:
-                percent = i / total
-                filled_length = int(bar_length * percent)
-                progress_bar = "=" * filled_length + "-" * (bar_length - filled_length)
-                sys.stdout.write(
-                    f"\r[{progress_bar}] {percent*100:3.0f}% ({i}/{total})"
-                )
-                sys.stdout.flush()
-                last_update = now
-            yield item
-        print()
+    for i, item in enumerate(iterable, 1):
+        now = time.monotonic()
+        should_update = now - last_update > min_interval
+        is_final = total is not None and i == total
+
+        if should_update or is_final:
+            if total is None:
+                print_unbounded(i)
+            else:
+                print_bounded(i, total)
+            last_update = now
+        yield item
+    print()
 
 
 def main() -> None:
