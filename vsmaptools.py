@@ -278,14 +278,13 @@ def main() -> None:
             top_left=BlockPosition(min(xs), min(zs)),
             bottom_right=BlockPosition(max(xs) + CHUNK_WIDTH, max(zs) + CHUNK_WIDTH),
         )
-        image = Image.new("RGB", (bounds.width, bounds.height))
         print(f"Calculated whole map bounds: {bounds.top_left} - {bounds.bottom_right}")
     else:
         bounds = config.map_bounds
-        image = Image.new("RGB", (bounds.width, bounds.height))
         map_pieces = [piece for piece in map_pieces if piece.intersects_bounds(bounds)]
         print(f"Filtered out of bounds map pieces, {len(map_pieces)} pieces remaining.")
     print(f"Image size: {bounds.width} x {bounds.height}")
+    image = Image.new("RGB", (bounds.width, bounds.height))
 
     with ProcessPoolExecutor() as executor:
         rendered_images = executor.map(methodcaller("render"), map_pieces)
