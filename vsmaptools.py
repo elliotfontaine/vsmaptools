@@ -9,11 +9,14 @@ import json
 import sqlite3
 import sys
 import time
+import tkinter as tk
+import traceback
 from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from operator import methodcaller
 from pathlib import Path
+from tkinter import messagebox, scrolledtext, Text
 from typing import Generator, Iterable, List, NamedTuple, Optional, Sized, TypeVar, cast
 
 import betterproto
@@ -236,7 +239,7 @@ def simple_progress_bar(
         percent = i / total
         filled_length = int(bar_length * percent)
         progress_bar = "=" * filled_length + "-" * (bar_length - filled_length)
-        sys.stdout.write(f"\r[{progress_bar}] {percent*100:3.0f}% ({i}/{total})")
+        sys.stdout.write(f"[{progress_bar}] {percent*100:3.0f}% ({i}/{total})\r")
         sys.stdout.flush()
 
     if total is None and hasattr(iterable, "__len__"):
@@ -255,7 +258,35 @@ def simple_progress_bar(
                 print_bounded(i, total)
             last_update = now
         yield item
-    print()
+    sys.stdout.write("\n")
+
+
+class RedirectText:
+    def __init__(self, text_widget: tk.Text):
+        self.text_widget = text_widget
+        self.buffer = ""
+
+    def write(self, string: str):
+        self.buffer += string
+        pos = 0
+        line = ""
+        while pos < len(self.buffer):
+            if self.buffer[pos] in "\r\n":
+                line = self.buffer[:pos]
+                if self.buffer[pos] == "\r":
+                    self.text_widget.delete("end-2l linestart", "end-2l lineend+1c")
+                    self.text_widget.insert(tk.END, line + "\n")
+                else:
+                    self.text_widget.insert(tk.END, line + "\n")
+                self.buffer = self.buffer[pos + 1 :]
+                pos = 0
+            else:
+                pos += 1
+        self.text_widget.see(tk.END)
+        self.text_widget.update()
+
+    def flush(self):
+        pass
 
 
 def main() -> None:
@@ -285,6 +316,7 @@ def main() -> None:
         print(f"Filtered out of bounds map pieces, {len(map_pieces)} pieces remaining.")
     print(f"Image size: {bounds.width} x {bounds.height}")
     image = Image.new("RGB", (bounds.width, bounds.height))
+    print()
 
     with ProcessPoolExecutor() as executor:
         rendered_images = executor.map(methodcaller("render"), map_pieces)
@@ -298,6 +330,30 @@ def main() -> None:
 
     image.save(config.output_path)
     print(f"Image saved as {config.output_path}")
+
+
+def gui_main():
+    root = tk.Tk()
+    root.title("VSMapTools Output")
+
+    text_box = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=100, height=10)
+    text_box.pack(fill=tk.BOTH, expand=True)
+
+    sys.stdout = RedirectText(text_box)
+    sys.stderr = RedirectText(text_box)
+
+    def run_main_with_error_popup():
+        try:
+            main()
+        except Exception as e:
+            traceback.print_exc(limit=0)
+            messagebox.showerror(
+                "Vsmaptools Error", f"{type(e).__name__}: {e}", parent=root
+            )
+            root.quit()
+
+    root.after(100, run_main_with_error_popup)
+    root.mainloop()
 
 
 def profiled_main() -> None:
@@ -318,12 +374,15 @@ def profiled_main() -> None:
 
 if __name__ == "__main__":
     parser = ArgumentParser()
+    parser.add_argument("-p", "--profiling", action="store_true", help="use cProfile")
     parser.add_argument(
-        "--profile", action="store_true", help="Enable profiling with cProfile"
+        "-n", "--no-gui", action="store_true", help="run headless (No GUI)"
     )
     args = parser.parse_args()
 
-    if args.profile:
+    if args.profiling:
         profiled_main()
-    else:
+    elif args.no_gui:
         main()
+    else:
+        gui_main()
