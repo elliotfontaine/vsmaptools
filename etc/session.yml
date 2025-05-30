@@ -1,0 +1,371 @@
+# The configurations that used for the recording, feel free to edit them
+config:
+  # Specify a command to be executed
+  # like `/bin/bash -l`, `ls`, or any other commands
+  # the default is bash for Linux
+  # or powershell.exe for Windows
+  # command: ./start-conda-shell.sh
+  command: bash -l
+
+  # Specify the current working directory path
+  # the default is the current working directory path
+  cwd: /Users/elliotfontaine/Documents/github/vsmaptools
+
+  # Export additional ENV variables
+  env:
+    recording: true
+
+  # Explicitly set the number of columns
+  # or use `auto` to take the current
+  # number of columns of your shell
+  cols: 65
+
+  # Explicitly set the number of rows
+  # or use `auto` to take the current
+  # number of rows of your shell
+  rows: 13
+
+  # Amount of times to repeat GIF
+  # If value is -1, play once
+  # If value is 0, loop indefinitely
+  # If value is a positive number, loop n times
+  repeat: 0
+
+  # Quality
+  # 1 - 100
+  quality: 100
+
+  # Delay between frames in ms
+  # If the value is `auto` use the actual recording delays
+  frameDelay: auto
+
+  # Maximum delay between frames in ms
+  # Ignored if the `frameDelay` isn't set to `auto`
+  # Set to `auto` to prevent limiting the max idle time
+  maxIdleTime: 2000
+
+  # The surrounding frame box
+  # The `type` can be null, window, floating, or solid`
+  # To hide the title use the value null
+  # Don't forget to add a backgroundColor style with a null as type
+  frameBox:
+    type: floating
+    title: Terminal
+    style:
+      border: 0px black solid
+      # boxShadow: none
+      # margin: 0px
+
+  # Add a watermark image to the rendered gif
+  # You need to specify an absolute path for
+  # the image on your machine or a URL, and you can also
+  # add your own CSS styles
+  watermark:
+    imagePath: null
+    style:
+      position: absolute
+      right: 15px
+      bottom: 15px
+      width: 100px
+      opacity: 0.9
+
+  # Cursor style can be one of
+  # `block`, `underline`, or `bar`
+  cursorStyle: block
+
+  # Font family
+  # You can use any font that is installed on your machine
+  # in CSS-like syntax
+  fontFamily: "Monaco, Lucida Console, Ubuntu Mono, Monospace"
+
+  # The size of the font
+  fontSize: 12
+
+  # The height of lines
+  lineHeight: 1
+
+  # The spacing between letters
+  letterSpacing: 0
+
+  # Theme
+  theme:
+    background: "transparent"
+    foreground: "#afafaf"
+    cursor: "#c7c7c7"
+    black: "#232628"
+    red: "#fc4384"
+    green: "#b3e33b"
+    yellow: "#ffa727"
+    blue: "#75dff2"
+    magenta: "#ae89fe"
+    cyan: "#708387"
+    white: "#d5d5d0"
+    brightBlack: "#626566"
+    brightRed: "#ff7fac"
+    brightGreen: "#c8ed71"
+    brightYellow: "#ebdf86"
+    brightBlue: "#75dff2"
+    brightMagenta: "#ae89fe"
+    brightCyan: "#b1c6ca"
+    brightWhite: "#f9f9f4"
+
+# Records, feel free to edit them
+records:
+  - delay: 2
+    content: "\e]7;file://MBP-Elliot.local/Users/elliotfontaine/Documents/github/vsmaptools\a"
+  - delay: 200
+    content: "\e[?2004h\e[36melliotfontaine\e[m@\e[32m\e[33;1mvsmaptools\e[m $ "
+  - delay: 500
+    content: p
+  - delay: 120
+    content: "y"
+  - delay: 120
+    content: t
+  - delay: 100
+    content: h
+  - delay: 130
+    content: o
+  - delay: 120
+    content: "n"
+  - delay: 150
+    content: "3"
+  - delay: 160
+    content: " "
+  - delay: 120
+    content: v
+  - delay: 100
+    content: s
+  - delay: 140
+    content: m
+  - delay: 150
+    content: a
+  - delay: 130
+    content: p
+  - delay: 140
+    content: t
+  - delay: 120
+    content: o
+  - delay: 70
+    content: o
+  - delay: 100
+    content: l
+  - delay: 80
+    content: s
+  - delay: 130
+    content: .
+  - delay: 150
+    content: p
+  - delay: 160
+    content: "y"
+  - delay: 377
+    content: "\r\n\e[?2004l\r"
+  - delay: 300
+    content: "Loading map pieces from 5ddf6a48-5d25-4b76-aa4a-3130c81f8f5c.db\r\n"
+  - delay: 900
+    content: "5685 map pieces loaded from the database.\r\n"
+  - delay: 450
+    content: "Calculated whole map bounds: BlockPosition(x=510368, z=510912) - BlockPosition(x=514176, z=515136)\r\nImage size: 3808 x 4224\r\n"
+  - delay: 331
+    content: "\r[--------------------]   0% (1/5685)"
+  - delay: 103
+    content: "\r[--------------------]   1% (42/5685)"
+  - delay: 104
+    content: "\r[--------------------]   2% (91/5685)"
+  - delay: 101
+    content: "\r[--------------------]   3% (150/5685)"
+  - delay: 103
+    content: "\r[--------------------]   4% (209/5685)"
+  - delay: 100
+    content: "\r[--------------------]   5% (265/5685)"
+  - delay: 103
+    content: "\r[=-------------------]   6% (326/5685)"
+  - delay: 104
+    content: "\r[=-------------------]   7% (377/5685)"
+  - delay: 101
+    content: "\r[=-------------------]   8% (436/5685)"
+  - delay: 102
+    content: "\r[=-------------------]   9% (497/5685)"
+  - delay: 101
+    content: "\r[=-------------------]  10% (554/5685)"
+  - delay: 100
+    content: "\r[==------------------]  11% (615/5685)"
+  - delay: 102
+    content: "\r[==------------------]  12% (673/5685)"
+  - delay: 100
+    content: "\r[==------------------]  13% (734/5685)"
+  - delay: 102
+    content: "\r[==------------------]  14% (794/5685)"
+  - delay: 101
+    content: "\r[===-----------------]  15% (853/5685)"
+  - delay: 102
+    content: "\r[===-----------------]  16% (908/5685)"
+  - delay: 103
+    content: "\r[===-----------------]  17% (967/5685)"
+  - delay: 100
+    content: "\r[===-----------------]  18% (1027/5685)"
+  - delay: 101
+    content: "\r[===-----------------]  19% (1088/5685)"
+  - delay: 106
+    content: "\r[====----------------]  20% (1143/5685)"
+  - delay: 102
+    content: "\r[====----------------]  21% (1205/5685)"
+  - delay: 101
+    content: "\r[====----------------]  22% (1260/5685)"
+  - delay: 101
+    content: "\r[====----------------]  23% (1317/5685)"
+  - delay: 101
+    content: "\r[====----------------]  24% (1376/5685)"
+  - delay: 102
+    content: "\r[=====---------------]  25% (1434/5685)"
+  - delay: 102
+    content: "\r[=====---------------]  26% (1492/5685)"
+  - delay: 102
+    content: "\r[=====---------------]  27% (1552/5685)"
+  - delay: 101
+    content: "\r[=====---------------]  28% (1613/5685)"
+  - delay: 102
+    content: "\r[=====---------------]  29% (1670/5685)"
+  - delay: 102
+    content: "\r[======--------------]  30% (1730/5685)"
+  - delay: 101
+    content: "\r[======--------------]  32% (1792/5685)"
+  - delay: 103
+    content: "\r[======--------------]  32% (1847/5685)"
+  - delay: 100
+    content: "\r[======--------------]  34% (1908/5685)"
+  - delay: 103
+    content: "\r[======--------------]  35% (1966/5685)"
+  - delay: 102
+    content: "\r[=======-------------]  36% (2024/5685)"
+  - delay: 106
+    content: "\r[=======-------------]  37% (2080/5685)"
+  - delay: 104
+    content: "\r[=======-------------]  38% (2143/5685)"
+  - delay: 100
+    content: "\r[=======-------------]  39% (2205/5685)"
+  - delay: 101
+    content: "\r[=======-------------]  40% (2264/5685)"
+  - delay: 100
+    content: "\r[========------------]  41% (2321/5685)"
+  - delay: 100
+    content: "\r[========------------]  42% (2381/5685)"
+  - delay: 101
+    content: "\r[========------------]  43% (2432/5685)"
+  - delay: 101
+    content: "\r[========------------]  44% (2489/5685)"
+  - delay: 105
+    content: "\r[========------------]  45% (2549/5685)"
+  - delay: 102
+    content: "\r[=========-----------]  46% (2610/5685)"
+  - delay: 103
+    content: "\r[=========-----------]  47% (2669/5685)"
+  - delay: 100
+    content: "\r[=========-----------]  48% (2728/5685)"
+  - delay: 101
+    content: "\r[=========-----------]  49% (2787/5685)"
+  - delay: 102
+    content: "\r[==========----------]  50% (2846/5685)"
+  - delay: 103
+    content: "\r[==========----------]  51% (2907/5685)"
+  - delay: 101
+    content: "\r[==========----------]  52% (2967/5685)"
+  - delay: 101
+    content: "\r[==========----------]  53% (3027/5685)"
+  - delay: 102
+    content: "\r[==========----------]  54% (3088/5685)"
+  - delay: 104
+    content: "\r[===========---------]  55% (3144/5685)"
+  - delay: 101
+    content: "\r[===========---------]  56% (3206/5685)"
+  - delay: 100
+    content: "\r[===========---------]  57% (3262/5685)"
+  - delay: 102
+    content: "\r[===========---------]  58% (3321/5685)"
+  - delay: 101
+    content: "\r[===========---------]  59% (3381/5685)"
+  - delay: 101
+    content: "\r[============--------]  61% (3440/5685)"
+  - delay: 100
+    content: "\r[============--------]  62% (3500/5685)"
+  - delay: 100
+    content: "\r[============--------]  63% (3559/5685)"
+  - delay: 103
+    content: "\r[============--------]  64% (3620/5685)"
+  - delay: 100
+    content: "\r[============--------]  65% (3671/5685)"
+  - delay: 104
+    content: "\r[=============-------]  66% (3728/5685)"
+  - delay: 100
+    content: "\r[=============-------]  67% (3788/5685)"
+  - delay: 100
+    content: "\r[=============-------]  68% (3846/5685)"
+  - delay: 101
+    content: "\r[=============-------]  69% (3906/5685)"
+  - delay: 103
+    content: "\r[=============-------]  70% (3962/5685)"
+  - delay: 103
+    content: "\r[==============------]  71% (4023/5685)"
+  - delay: 100
+    content: "\r[==============------]  72% (4084/5685)"
+  - delay: 100
+    content: "\r[==============------]  73% (4142/5685)"
+  - delay: 101
+    content: "\r[==============------]  74% (4202/5685)"
+  - delay: 100
+    content: "\r[==============------]  75% (4263/5685)"
+  - delay: 101
+    content: "\r[===============-----]  76% (4321/5685)"
+  - delay: 101
+    content: "\r[===============-----]  77% (4379/5685)"
+  - delay: 105
+    content: "\r[===============-----]  78% (4437/5685)"
+  - delay: 101
+    content: "\r[===============-----]  79% (4496/5685)"
+  - delay: 100
+    content: "\r[================----]  80% (4557/5685)"
+  - delay: 106
+    content: "\r[================----]  81% (4618/5685)"
+  - delay: 100
+    content: "\r[================----]  82% (4678/5685)"
+  - delay: 101
+    content: "\r[================----]  83% (4737/5685)"
+  - delay: 100
+    content: "\r[================----]  84% (4793/5685)"
+  - delay: 103
+    content: "\r[=================---]  85% (4854/5685)"
+  - delay: 101
+    content: "\r[=================---]  86% (4905/5685)"
+  - delay: 101
+    content: "\r[=================---]  87% (4962/5685)"
+  - delay: 103
+    content: "\r[=================---]  88% (5021/5685)"
+  - delay: 102
+    content: "\r[=================---]  89% (5082/5685)"
+  - delay: 103
+    content: "\r[==================--]  90% (5141/5685)"
+  - delay: 101
+    content: "\r[==================--]  92% (5203/5685)"
+  - delay: 101
+    content: "\r[==================--]  93% (5263/5685)"
+  - delay: 104
+    content: "\r[==================--]  94% (5321/5685)"
+  - delay: 100
+    content: "\r[==================--]  95% (5383/5685)"
+  - delay: 101
+    content: "\r[===================-]  96% (5439/5685)"
+  - delay: 101
+    content: "\r[===================-]  97% (5501/5685)"
+  - delay: 104
+    content: "\r[===================-]  98% (5560/5685)"
+  - delay: 104
+    content: "\r[===================-]  99% (5618/5685)"
+  - delay: 101
+    content: "\r[===================-] 100% (5682/5685)\r[====================] 100% (5685/5685)\r\n"
+  - delay: 42
+    content: "Processed 5685 map pieces.\r\n"
+  - delay: 1087
+    content: "Image saved as vs_worldmap.png\r\n"
+  - delay: 65
+    content: "\e[?2004h\e[36melliotfontaine\e[m@\e[32m\e[33;1mvsmaptools\e[m $ "
+  - delay: 3023
+    content: " "
