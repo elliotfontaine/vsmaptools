@@ -67,7 +67,7 @@ func _ready() -> void:
 	map_preview.selection_tool.selected.connect(_on_selection_tool_selected)
 	
 	Logger.debug("Screen scale factor: %s" % DisplayServer.screen_get_scale(DisplayServer.SCREEN_OF_MAIN_WINDOW))
-	
+
 	var project_version: String = ProjectSettings.get_setting("application/config/version")
 	version_tag.text = "v%s" % project_version
 	Logger.info("Vintage Story Map Tools — v%s" % project_version)
@@ -201,6 +201,7 @@ func _on_export_button_pressed() -> void:
 		Logger.error("Cannot export since there isn't a loaded Map.")
 		return
 	
+	export_progress_bar.value = 0.0
 	export_progress_bar.show()
 	import_button.disabled = true
 	export_button.disabled = true
@@ -227,8 +228,13 @@ func _on_export_button_pressed() -> void:
 func _on_export_image_ready() -> void:
 	Logger.info("Image processing completed.")
 	export_progress_bar.hide()
-	export_progress_bar.value = 0.0
-	export_file_dialog.set_current_file("vintage_story_map.png")
+	match export_type:
+		EXPORT_TYPE.PNG:
+			export_file_dialog.set_current_file("vintage_story_map.png")
+		EXPORT_TYPE.JPEG:
+			export_file_dialog.set_current_file("vintage_story_map.jpg")
+		_:
+			export_file_dialog.set_current_file("vintage_story_map.png")
 	import_button.disabled = false
 	export_button.disabled = false
 	export_file_dialog.popup()
