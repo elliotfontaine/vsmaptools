@@ -65,9 +65,14 @@ func _ready() -> void:
 	main_module.set_external_sink(sink)
 	main_module.set_common_output_strategy(Logger.STRATEGY_PRINT_AND_EXTERNAL_SINK)
 	map_preview.selection_tool.selected.connect(_on_selection_tool_selected)
-	version_tag.text = "v%s" % ProjectSettings.get_setting("application/config/version")
+	
 	Logger.debug("Screen scale factor: %s" % DisplayServer.screen_get_scale(DisplayServer.SCREEN_OF_MAIN_WINDOW))
-	Logger.info("Ready.")
+	
+	var project_version: String = ProjectSettings.get_setting("application/config/version")
+	version_tag.text = "v%s" % project_version
+	Logger.info("Vintage Story Map Tools — v%s" % project_version)
+	Logger.info("Godot version: %s" % Engine.get_version_info()["string"] + "— https://godotengine.org")
+	Logger.info("Renderer: %s" % RenderingServer.get_video_adapter_name())
 
 
 func get_filename_from_path(path: String) -> String:

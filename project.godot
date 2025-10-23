@@ -15,7 +15,11 @@ config/version="2.0.0"
 run/main_scene="uid://dsog6tys60ik"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 run/low_processor_mode=true
-config/icon="uid://domsnt2l8b3jq"
+boot_splash/bg_color=Color(0.117647, 0.117647, 0.117647, 1)
+boot_splash/fullsize=false
+boot_splash/use_filter=false
+boot_splash/image="uid://bj7k6e8077ggu"
+config/icon="uid://byey3r8ctvmyu"
 
 [autoload]
 
