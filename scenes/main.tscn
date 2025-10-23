@@ -5,11 +5,9 @@
 [ext_resource type="StyleBox" uid="uid://whi2rncot3p0" path="res://resources/title_panel.tres" id="2_lquwl"]
 [ext_resource type="PackedScene" uid="uid://bjduwlxxduy7l" path="res://scenes/bounds_square_view.tscn" id="3_1bvp3"]
 [ext_resource type="Script" uid="uid://biad503x385qg" path="res://addons/tnowe_extra_controls/elements/properties_box.gd" id="3_h2yge"]
+[ext_resource type="FontVariation" uid="uid://c5riwjed41xg" path="res://resources/embolden_inter.tres" id="3_tipki"]
 [ext_resource type="PackedScene" uid="uid://fv7lq3fnvbrb" path="res://scenes/map_preview.tscn" id="6_o6xl0"]
-[ext_resource type="FontFile" uid="uid://bctanex34iiej" path="res://assets/AtkynsonMonoNerdFontMono-Regular.otf" id="7_o6xl0"]
-
-[sub_resource type="FontVariation" id="FontVariation_7mycd"]
-variation_embolden = 0.6
+[ext_resource type="FontFile" uid="uid://bctanex34iiej" path="res://assets/fonts/AtkynsonMonoNerdFontMono-Regular.otf" id="7_o6xl0"]
 
 [node name="Main" type="ColorRect"]
 anchors_preset = 15
@@ -65,7 +63,7 @@ theme_override_styles/panel = ExtResource("2_lquwl")
 
 [node name="ImportTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/ImportTitle"]
 layout_mode = 2
-theme_override_fonts/font = SubResource("FontVariation_7mycd")
+theme_override_fonts/font = ExtResource("3_tipki")
 text = "Import"
 horizontal_alignment = 1
 
@@ -113,7 +111,7 @@ theme_override_styles/panel = ExtResource("2_lquwl")
 
 [node name="MapInfoTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/MapInfoTitle"]
 layout_mode = 2
-theme_override_fonts/font = SubResource("FontVariation_7mycd")
+theme_override_fonts/font = ExtResource("3_tipki")
 text = "Map Info"
 horizontal_alignment = 1
 
@@ -196,7 +194,7 @@ theme_override_styles/panel = ExtResource("2_lquwl")
 
 [node name="ExportOptionsTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/ExportOptions/ExportOptionsTitle"]
 layout_mode = 2
-theme_override_fonts/font = SubResource("FontVariation_7mycd")
+theme_override_fonts/font = ExtResource("3_tipki")
 text = "Selection"
 horizontal_alignment = 1
 
@@ -253,7 +251,7 @@ theme_override_styles/panel = ExtResource("2_lquwl")
 
 [node name="LogsTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/LogsPanel/HBoxContainer/LogsTitle"]
 layout_mode = 2
-theme_override_fonts/font = SubResource("FontVariation_7mycd")
+theme_override_fonts/font = ExtResource("3_tipki")
 text = "Logs"
 horizontal_alignment = 1
 

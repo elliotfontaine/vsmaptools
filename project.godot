@@ -44,7 +44,8 @@ enabled=PackedStringArray("res://addons/godot-sqlite/plugin.cfg", "res://addons/
 [gui]
 
 theme/custom="uid://bgpo601renruf"
-theme/custom_font="uid://dt83tbvdrp0de"
+theme/custom_font="uid://svbrynuhhqqa"
+theme/default_font_multichannel_signed_distance_field=true
 
 [input]
 
