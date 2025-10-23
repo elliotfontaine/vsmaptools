@@ -1,0 +1,312 @@
+[gd_scene load_steps=9 format=3 uid="uid://dsog6tys60ik"]
+
+[ext_resource type="Script" uid="uid://m0ghr5qlq7h" path="res://scenes/main.gd" id="1_0xm2m"]
+[ext_resource type="Texture2D" uid="uid://ch8ryyqxqmnx6" path="res://assets/icons/Load.svg" id="1_ig7tw"]
+[ext_resource type="StyleBox" uid="uid://whi2rncot3p0" path="res://resources/title_panel.tres" id="2_lquwl"]
+[ext_resource type="PackedScene" uid="uid://bjduwlxxduy7l" path="res://scenes/bounds_square_view.tscn" id="3_1bvp3"]
+[ext_resource type="Script" uid="uid://biad503x385qg" path="res://addons/tnowe_extra_controls/elements/properties_box.gd" id="3_h2yge"]
+[ext_resource type="PackedScene" uid="uid://fv7lq3fnvbrb" path="res://scenes/map_preview.tscn" id="6_o6xl0"]
+[ext_resource type="FontFile" uid="uid://bctanex34iiej" path="res://assets/AtkynsonMonoNerdFontMono-Regular.otf" id="7_o6xl0"]
+
+[sub_resource type="FontVariation" id="FontVariation_7mycd"]
+variation_embolden = 0.6
+
+[node name="Main" type="ColorRect"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.145098, 0.145098, 0.145098, 1)
+script = ExtResource("1_0xm2m")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VSplitContainer" type="VSplitContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer/VSplitContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 20.0
+follow_focus = true
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 4
+
+[node name="LeftSideMenu" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 32
+
+[node name="Import" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu"]
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import"]
+layout_mode = 2
+
+[node name="ImportTitle" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_lquwl")
+
+[node name="ImportTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/ImportTitle"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontVariation_7mycd")
+text = "Import"
+horizontal_alignment = 1
+
+[node name="MapFile" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/MapFile"]
+layout_mode = 2
+text = "Map File"
+
+[node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/MapFile"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 15
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/MapFile"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FileLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/MapFile/PanelContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+mouse_filter = 0
+text = "<empty>"
+horizontal_alignment = 1
+clip_text = true
+
+[node name="ImportButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/MapFile"]
+unique_name_in_owner = true
+layout_mode = 2
+icon = ExtResource("1_ig7tw")
+
+[node name="MapInfo" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu"]
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo"]
+layout_mode = 2
+
+[node name="MapInfoTitle" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_lquwl")
+
+[node name="MapInfoTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/MapInfoTitle"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontVariation_7mycd")
+text = "Map Info"
+horizontal_alignment = 1
+
+[node name="MapInfoHint" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.560955, 0.560955, 0.560955, 1)
+text = "Import a map file to inspect it."
+
+[node name="LoadingMapContainer" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="LoadingLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadingMapContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "Loading..."
+
+[node name="MapLoadingBar" type="ProgressBar" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadingMapContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LoadedMapInfo" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ChunksNumber" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadedMapInfo"]
+layout_mode = 2
+
+[node name="ChunksNumberLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadedMapInfo/ChunksNumber"]
+layout_mode = 2
+text = "Discovered Chunks  "
+
+[node name="ChunksNumberValue" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadedMapInfo/ChunksNumber"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 10
+text = "?"
+
+[node name="MapDensity" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadedMapInfo"]
+layout_mode = 2
+
+[node name="MapDensityLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadedMapInfo/MapDensity"]
+layout_mode = 2
+text = "Density  "
+
+[node name="MapDensityValue" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadedMapInfo/MapDensity"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 10
+text = "?"
+
+[node name="BoundsSquare" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadedMapInfo"]
+layout_mode = 2
+
+[node name="BoundsTitle" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadedMapInfo/BoundsSquare"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Map Bounds (in blocks)  "
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadedMapInfo"]
+layout_mode = 2
+size_flags_horizontal = 10
+
+[node name="BoundsSquareView" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/MapInfo/LoadedMapInfo/PanelContainer" instance=ExtResource("3_1bvp3")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ExportOptions" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu"]
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/ExportOptions"]
+layout_mode = 2
+
+[node name="ExportOptionsTitle" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/ExportOptions"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_lquwl")
+
+[node name="ExportOptionsTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/ExportOptions/ExportOptionsTitle"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontVariation_7mycd")
+text = "Selection"
+horizontal_alignment = 1
+
+[node name="ExportPropertiesBox" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/ExportOptions"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("3_h2yge")
+metadata/_custom_type_script = "uid://biad503x385qg"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ExportButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 10
+text = "Export Image"
+
+[node name="FiletypeOptionButton" type="OptionButton" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+selected = 0
+item_count = 2
+popup/item_0/text = "PNG"
+popup/item_0/id = 0
+popup/item_1/text = "JPEG"
+popup/item_1/id = 1
+
+[node name="ExportProgressBar" type="ProgressBar" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MapPreview" parent="MarginContainer/VSplitContainer/HSplitContainer" instance=ExtResource("6_o6xl0")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.5
+
+[node name="LogsPanel" type="VBoxContainer" parent="MarginContainer/VSplitContainer"]
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/LogsPanel"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VSplitContainer/LogsPanel"]
+layout_mode = 2
+
+[node name="LogsTitle" type="PanelContainer" parent="MarginContainer/VSplitContainer/LogsPanel/HBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = ExtResource("2_lquwl")
+
+[node name="LogsTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/LogsPanel/HBoxContainer/LogsTitle"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontVariation_7mycd")
+text = "Logs"
+horizontal_alignment = 1
+
+[node name="VersionTag" type="Label" parent="MarginContainer/VSplitContainer/LogsPanel/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "vX.Y.Z"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VSplitContainer/LogsPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogsRTL" type="RichTextLabel" parent="MarginContainer/VSplitContainer/LogsPanel/PanelContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+focus_mode = 2
+theme_override_colors/default_color = Color(0.74902, 0.74902, 0.74902, 1)
+theme_override_colors/selection_color = Color(1, 1, 1, 0.247059)
+theme_override_fonts/normal_font = ExtResource("7_o6xl0")
+theme_override_fonts/mono_font = ExtResource("7_o6xl0")
+scroll_following = true
+vertical_alignment = 2
+selection_enabled = true
+
+[node name="ImportFileDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Open a File"
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.db")
+use_native_dialog = true
+
+[node name="ExportFileDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+access = 2
+use_native_dialog = true
+
+[node name="Timer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 0.5
+autostart = true
+ignore_time_scale = true
+
+[connection signal="gui_input" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/MapFile/PanelContainer/FileLabel" to="." method="_on_file_label_gui_input"]
+[connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/MapFile/ImportButton" to="." method="_on_import_button_pressed"]
+[connection signal="bool_changed" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/ExportOptions/ExportPropertiesBox" to="." method="_on_export_properties_box_bool_changed"]
+[connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/HBoxContainer/ExportButton" to="." method="_on_export_button_pressed"]
+[connection signal="item_selected" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/HBoxContainer/FiletypeOptionButton" to="." method="_on_filetype_option_button_item_selected"]
+[connection signal="file_selected" from="ImportFileDialog" to="." method="_on_file_dialog_file_selected"]
+[connection signal="file_selected" from="ExportFileDialog" to="." method="_on_export_file_dialog_file_selected"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

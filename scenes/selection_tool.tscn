@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://7saafgael53k"]
+
+[ext_resource type="Script" uid="uid://dphhi6ora4wst" path="res://scenes/selection_tool.gd" id="1_irsra"]
+[ext_resource type="Texture2D" uid="uid://bmf1djuackwhc" path="res://assets/selection_rectangle.png" id="2_blf3y"]
+
+[node name="SelectionTool" type="Node2D"]
+script = ExtResource("1_irsra")
+
+[node name="NinePatchRect" type="NinePatchRect" parent="."]
+unique_name_in_owner = true
+visible = false
+modulate = Color(0.592157, 1, 1, 1)
+texture_filter = 1
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("2_blf3y")
+patch_margin_left = 1
+patch_margin_top = 1
+patch_margin_right = 1
+patch_margin_bottom = 1
