@@ -1,6 +1,6 @@
-# 🗺️ VS Map Renderer
+# 🗺️ VS Map Tools
 
-**VS Map Renderer** is a tool that reads color data from your [Vintage Story](https://www.vintagestory.at/) client-side minimap, and exports it as a high-resolution PNG image. You can choose to render a specific region using coordinate bounds, or export the **entire explored world**.
+**VS Map Tools** is a GUI application that reads color data from your [Vintage Story](https://www.vintagestory.at/) client-side minimap, and exports it as a high-resolution PNG image. You can choose to render a specific region using coordinate bounds, or export the **entire explored world**.
 
 The output is **pixel-perfect**: each block in the game is mapped to exactly one pixel in the image. **No scaling, no blurring, no interpolation**.
 
@@ -23,6 +23,12 @@ _Map colors are from the [Medieval Map](https://mods.vintagestory.at/marximusmed
 ## Installation
 
 From the Releases page, download the [latest version](https://github.com/elliotfontaine/vsmaptools/releases) corresponding to your operating system.
+
+## Roadmap
+
+- 👥 **Collaborative map sharing** — merge several players’ minimap databases into a single world map.
+- 🖼️ **Improved map preview** — display real colors for explored chunks instead of plain white/black placeholders.
+- 🚀 **Multi-threaded export** — significantly faster rendering for large worlds.
 
 ## License
 
