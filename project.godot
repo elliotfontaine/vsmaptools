@@ -19,6 +19,7 @@ config/icon="uid://domsnt2l8b3jq"
 
 [autoload]
 
+HiDPIManager="*res://autoloads/hidpi_manager.gd"
 Logger="*res://autoloads/logger.gd"
 
 [debug]
