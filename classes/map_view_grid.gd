@@ -10,7 +10,6 @@ enum GridPattern {DOTS, LINES}
 var _pattern: int = GridPattern.LINES
 var _camera: PanZoomCamera
 var _tilemap: TileMapLayer
-var _grid_color: Color
 
 
 func _ready() -> void:
@@ -51,20 +50,20 @@ func _draw() -> void:
 			for x in range(x_start, x_end):
 				for y in range(y_start, y_end):
 					var pos := Vector2(x, y) * cell_size
-					draw_rect(Rect2(pos.x, pos.y, dot_size, dot_size), _grid_color)
+					draw_rect(Rect2(pos.x, pos.y, dot_size, dot_size), grid_color)
 		GridPattern.LINES:
 			# Vertical lines
 			var start_index := int(offset.x / cell_size) - 1
 			var end_index := int((size.x + offset.x) / cell_size) + 1
 			for i in range(start_index, end_index):
-				var color: Color = Color.LIME_GREEN if i == 0 else _grid_color
+				var color: Color = Color.LIME_GREEN if i == 0 else grid_color
 				draw_line(Vector2(i * cell_size, offset.y + size.y), Vector2(i * cell_size, offset.y - size.y), color)
 
 			# Horizontal lines
 			start_index = int(offset.y / cell_size) - 1
 			end_index = int((size.y + offset.y) / cell_size) + 1
 			for i in range(start_index, end_index):
-				var color: Color = Color.MEDIUM_VIOLET_RED if i == 0 else _grid_color
+				var color: Color = Color.MEDIUM_VIOLET_RED if i == 0 else grid_color
 				draw_line(Vector2(offset.x + size.x, i * cell_size), Vector2(offset.x - size.x, i * cell_size), color)
 
 
