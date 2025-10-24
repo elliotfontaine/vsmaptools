@@ -47,25 +47,32 @@ func get_pieces_relative_chunk_positions(origin_chunk: Vector2i) -> Array[Vector
 
 
 func _build_export(topleft: Vector2i, bottomright: Vector2i, whole_map: bool) -> Image:
-	var n_processed_chunks := 0
-	var steps := range(0, _map_pieces.size(), int(STEP_SIZE_PERCENT * _map_pieces.size()))
 	var size: Vector2i = bottomright - topleft
 	var image_rect: Rect2i = Rect2i(topleft, size)
 	var image := Image.create_empty(size.x, size.y, true, Image.FORMAT_RGBA8)
-
-	for piece: MapPiece in _map_pieces.values():
-		var piece_rect := Rect2i(piece.block_position, Vector2i(CHUNK_SIZE, CHUNK_SIZE))
-		if whole_map or image_rect.has_point(piece.block_position) or image_rect.intersects(piece_rect):
-			var piece_img := MapPiece._image_from_blob(piece.blob)
-			image.blit_rect(
-				piece_img,
-				Rect2i(Vector2i.ZERO, Vector2i(CHUNK_SIZE, CHUNK_SIZE)),
-				piece.block_position - topleft
-			)
-		n_processed_chunks += 1
-		if n_processed_chunks in steps:
-			export_step.emit.call_deferred(float(n_processed_chunks) / float(_map_pieces.size()))
-
+	
+	var pieces_to_process: Array[MapPiece]
+	if whole_map:
+		pieces_to_process = _map_pieces.values()
+	else:
+		for piece: MapPiece in _map_pieces.values():
+			var piece_rect := Rect2i(piece.block_position, Vector2i(CHUNK_SIZE, CHUNK_SIZE))
+			if image_rect.has_point(piece.block_position) or image_rect.intersects(piece_rect):
+				pieces_to_process.append(piece)
+	
+	var n_processed_pieces := 0
+	var steps := range(0, pieces_to_process.size(), int(STEP_SIZE_PERCENT * pieces_to_process.size()))
+	for piece in pieces_to_process:
+		var piece_img := MapPiece._image_from_blob(piece.blob)
+		image.blit_rect(
+			piece_img,
+			Rect2i(Vector2i.ZERO, Vector2i(CHUNK_SIZE, CHUNK_SIZE)),
+			piece.block_position - topleft
+		)
+		n_processed_pieces += 1
+		if n_processed_pieces in steps:
+			export_step.emit.call_deferred(float(n_processed_pieces) / float(pieces_to_process.size()))
+	
 	export_image_ready.emit.call_deferred()
 	return image
 
