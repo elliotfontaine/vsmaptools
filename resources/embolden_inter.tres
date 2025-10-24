@@ -1,7 +1,7 @@
 [gd_resource type="FontVariation" load_steps=2 format=3 uid="uid://c5riwjed41xg"]
 
-[ext_resource type="FontFile" uid="uid://svbrynuhhqqa" path="res://assets/fonts/Inter.ttc" id="1_v2t7v"]
+[ext_resource type="FontFile" uid="uid://b73ik3qnk0qso" path="res://assets/fonts/Inter.ttc" id="1_v2t7v"]
 
 [resource]
 base_font = ExtResource("1_v2t7v")
-variation_face_index = 12
+variation_face_index = 1
