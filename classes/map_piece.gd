@@ -17,7 +17,7 @@ func _init(position: int, data: PackedByteArray) -> void:
 
 func _chunkpos_from_int(pos: int) -> Vector2i:
 	var chunk_x := pos & ((1 << 21) - 1) # bits 0–20
-	var chunk_z := (pos >> 27) & ((1 << 21) - 1) # bits 28–49
+	var chunk_z := (pos >> 27) & ((1 << 21) - 1) # bits 27–47
 	return Vector2i(chunk_x, chunk_z)
 
 
