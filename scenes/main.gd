@@ -9,6 +9,12 @@ var db: SQLite = null
 var map: Map
 var export_type := EXPORT_TYPE.PNG
 
+var _export_progress: int = 0:
+	set(value):
+		_export_progress = value
+		export_progress_bar.value = value
+
+
 var min_X: int:
 	set(value): export_properties_box.set_value(&"Min X", value)
 	get: return export_properties_box.get_value(&"Min X")
@@ -122,7 +128,7 @@ func _on_file_dialog_file_selected(path: String) -> void:
 
 	map.loading_step.connect(_on_map_loading_step)
 	map.loading_completed.connect(_on_map_loading_completed)
-	map.export_step.connect(_on_map_export_step)
+	map.export_progressed.connect(_on_map_export_progressed)
 	map.export_image_ready.connect(_on_export_image_ready)
 	map.load_pieces()
 
@@ -155,8 +161,8 @@ func _on_map_loading_completed() -> void:
 	)
 
 
-func _on_map_export_step(step: float) -> void:
-	export_progress_bar.value = step * 100
+func _on_map_export_progressed(percent: int) -> void:
+	_export_progress = percent
 
 
 func _on_timer_timeout() -> void:
@@ -201,7 +207,7 @@ func _on_export_button_pressed() -> void:
 		Logger.error("Cannot export since there isn't a loaded Map.")
 		return
 	
-	export_progress_bar.value = 0.0
+	_export_progress = 0
 	export_progress_bar.show()
 	import_button.disabled = true
 	export_button.disabled = true

@@ -1,18 +1,25 @@
 class_name Map extends Node
 
 signal loading_step
-signal export_step
+signal export_progressed(percent: int)
 signal loading_completed
 signal export_image_ready
 
 const TABLE_NAME := "mappiece"
 const CHUNK_SIZE: int = MapPiece.CHUNK_SIZE
 const STEP_SIZE_PERCENT := 0.02
+const N_BATCHES := 100
 
 var _load_thread: Thread
-var _export_thread: Thread
 var _db: SQLite = null
 var _map_pieces: Dictionary[Vector2i, MapPiece] = {}
+
+# Export state
+var _export_batches: Array[Array]
+var _task_id: int = -1
+var _export_progress := 0 # (as %)
+var _topleft: Vector2i
+var _export: Image
 
 var chunks_count: int = 0
 var top_left_bound: Vector2i = Vector2i.MAX
@@ -22,7 +29,20 @@ var bottom_right_bound: Vector2i = Vector2i.MIN
 func _init(db: SQLite) -> void:
 	_db = db
 	_load_thread = Thread.new()
-	_export_thread = Thread.new()
+
+
+func _process(_delta: float) -> void:
+	if _task_id == -1:
+		return
+		
+	if WorkerThreadPool.is_group_task_completed(_task_id):
+		_clean_up_worker()
+	elif WorkerThreadPool.get_group_processed_element_count(_task_id) != 0:
+		@warning_ignore("integer_division")
+		var percent: int = 100 * WorkerThreadPool.get_group_processed_element_count(_task_id) / N_BATCHES
+		if percent != _export_progress:
+			_export_progress = percent
+			export_progressed.emit(percent)
 
 
 func load_pieces() -> void:
@@ -32,24 +52,10 @@ func load_pieces() -> void:
 
 
 func build_export_threaded(topleft: Vector2i, bottomright: Vector2i, whole_map: bool) -> void:
-	_export_thread.start(_build_export.bind(topleft, bottomright, whole_map))
-
-
-func get_piece(chunk_position: Vector2i) -> MapPiece:
-	return _map_pieces.get(chunk_position)
-
-
-func get_pieces_relative_chunk_positions(origin_chunk: Vector2i) -> Array[Vector2i]:
-	var ret: Array[Vector2i]
-	for pos: Vector2i in _map_pieces.keys():
-		ret.append(pos - origin_chunk)
-	return ret
-
-
-func _build_export(topleft: Vector2i, bottomright: Vector2i, whole_map: bool) -> Image:
+	_topleft = topleft
 	var size: Vector2i = bottomright - topleft
 	var image_rect: Rect2i = Rect2i(topleft, size)
-	var image := Image.create_empty(size.x, size.y, true, Image.FORMAT_RGBA8)
+	_export = Image.create_empty(size.x, size.y, true, Image.FORMAT_RGBA8)
 	
 	var pieces_to_process: Array[MapPiece]
 	if whole_map:
@@ -60,29 +66,51 @@ func _build_export(topleft: Vector2i, bottomright: Vector2i, whole_map: bool) ->
 			if image_rect.has_point(piece.block_position) or image_rect.intersects(piece_rect):
 				pieces_to_process.append(piece)
 	
-	var n_processed_pieces := 0
-	var steps := range(0, pieces_to_process.size(), int(STEP_SIZE_PERCENT * pieces_to_process.size()))
-	for piece in pieces_to_process:
-		var piece_img := MapPiece._image_from_blob(piece.blob)
-		image.blit_rect(
-			piece_img,
-			Rect2i(Vector2i.ZERO, Vector2i(CHUNK_SIZE, CHUNK_SIZE)),
-			piece.block_position - topleft
-		)
-		n_processed_pieces += 1
-		if n_processed_pieces in steps:
-			export_step.emit.call_deferred(float(n_processed_pieces) / float(pieces_to_process.size()))
+	_export_batches = Utils.split_array_evenly(pieces_to_process, N_BATCHES)
+	_task_id = WorkerThreadPool.add_group_task(
+		_process_export_batch,
+		_export_batches.size(),
+		max(min(4, OS.get_processor_count() - 2), 1),
+		true,
+	)
+
+
+func _process_export_batch(batch_index: int) -> void:
+	var batch: Array[MapPiece] = _export_batches[batch_index]
+	for piece in batch:
+		if not piece.pixel_data: # do not decode if already done
+			piece.decode_blob(piece.blob)
+
+
+func _clean_up_worker() -> void:
+	WorkerThreadPool.wait_for_group_task_completion(_task_id)
+	_task_id = -1
+	
+	for batch in _export_batches:
+		for piece: MapPiece in batch:
+			var image := piece.generate_image()
+			_export.blit_rect(
+				image,
+				Rect2i(Vector2i.ZERO, Vector2i(CHUNK_SIZE, CHUNK_SIZE)),
+				piece.block_position - _topleft
+			)
 	
 	export_image_ready.emit.call_deferred()
-	return image
+
+
+func get_pieces_relative_chunk_positions(origin_chunk: Vector2i) -> Array[Vector2i]:
+	var ret: Array[Vector2i]
+	for pos: Vector2i in _map_pieces.keys():
+		ret.append(pos - origin_chunk)
+	return ret
 
 
 func get_export_image() -> Image:
-	if _export_thread.is_alive():
-		Logger.warn("Export thread still alive (unexpected).")
+	if _task_id != -1 and not WorkerThreadPool.is_task_completed(_task_id):
+		Logger.warn("Export worker still alive (unexpected).")
 		return null
 	else:
-		return _export_thread.wait_to_finish()
+		return _export
 
 
 func get_map_density() -> float:
@@ -133,5 +161,3 @@ func _set_chunks_count() -> void:
 func _exit_tree() -> void:
 	if _load_thread.is_started():
 		_load_thread.wait_to_finish()
-	if _export_thread.is_started():
-		_export_thread.wait_to_finish()
