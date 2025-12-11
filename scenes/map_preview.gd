@@ -26,12 +26,12 @@ func _input(event: InputEvent) -> void:
 
 		if block_pos != _last_hovered_block:
 			_last_hovered_block = block_pos
-			block_pos_label.text = "Block : %s" % block_pos
+			block_pos_label.text = str(block_pos)
 			blockpos_hovered.emit(chunk_pos)
 		
 		if chunk_pos != _last_hovered_chunk:
 			_last_hovered_chunk = chunk_pos
-			chunk_pos_label.text = "Chunk : %s" % chunk_pos
+			chunk_pos_label.text = str(chunk_pos)
 			chunk_hovered.emit(chunk_pos)
 
 

@@ -58,23 +58,33 @@ layout_mode = 2
 [node name="VBoxContainer" type="VBoxContainer" parent="TopLeftInfoBox"]
 layout_mode = 2
 
-[node name="BlockPosLabel" type="Label" parent="TopLeftInfoBox/VBoxContainer"]
-unique_name_in_owner = true
+[node name="BlockPos" type="HBoxContainer" parent="TopLeftInfoBox/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_outline_size = 8
-text = "Block : (-48, 314)"
 
-[node name="ChunkPosLabel" type="Label" parent="TopLeftInfoBox/VBoxContainer"]
+[node name="BlockPosTitle" type="Label" parent="TopLeftInfoBox/VBoxContainer/BlockPos"]
+layout_mode = 2
+theme_type_variation = &"ShadowTextLabel"
+text = "Block : "
+
+[node name="BlockPosLabel" type="Label" parent="TopLeftInfoBox/VBoxContainer/BlockPos"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_outline_size = 8
-text = "Chunk : (-2, 10)"
+theme_type_variation = &"ShadowTextLabel"
+text = "(-48, 314)"
+
+[node name="ChunkPos" type="HBoxContainer" parent="TopLeftInfoBox/VBoxContainer"]
+layout_mode = 2
+
+[node name="ChunkPosTitle" type="Label" parent="TopLeftInfoBox/VBoxContainer/ChunkPos"]
+layout_mode = 2
+theme_type_variation = &"ShadowTextLabel"
+text = "Chunk : "
+
+[node name="ChunkPosLabel" type="Label" parent="TopLeftInfoBox/VBoxContainer/ChunkPos"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ShadowTextLabel"
+text = "(-2, 10)"
 
 [node name="Zoom" type="HBoxContainer" parent="TopLeftInfoBox/VBoxContainer"]
 layout_mode = 2
@@ -89,10 +99,7 @@ text = "-"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_outline_size = 8
+theme_type_variation = &"ShadowTextLabel"
 text = "100%"
 horizontal_alignment = 1
 vertical_alignment = 1
