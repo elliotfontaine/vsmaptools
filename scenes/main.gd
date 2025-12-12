@@ -223,7 +223,7 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 			var absolute_pos := export_properties_box.get_int(&"Spawnpoint Absolute Coordinates")
 			var is_relative := export_properties_box.get_bool(&"Use Relative Coordinates")
 			var tl := map.top_left_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
-			var br := map.bottom_right_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
+			var br := (map.bottom_right_bound + Vector2i.ONE) * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
 			min_X = tl.x
 			max_X = br.x
 			min_Z = tl.y
@@ -255,7 +255,7 @@ func _on_export_button_pressed() -> void:
 	var bottomright: Vector2i
 	if whole_map:
 		topleft = map.top_left_bound * Map.CHUNK_SIZE
-		bottomright = map.bottom_right_bound * Map.CHUNK_SIZE
+		bottomright = (map.bottom_right_bound + Vector2i.ONE) * Map.CHUNK_SIZE
 		Logger.info("Exporting whole map. Bounds: {0}, {1}".format([topleft, bottomright]))
 	else:
 		if use_relative_coords:
