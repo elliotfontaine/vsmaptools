@@ -2,16 +2,17 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ch8ryyqxqmnx6"
-path="res://.godot/imported/load.svg-c29ffef129393612a992e1c64a52566e.ctex"
+uid="uid://ci24ux8sd2sy1"
+path="res://.godot/imported/mouse.svg-d76b68a3bb6a351a4c30c1789a8e904d.ctex"
 metadata={
+"has_editor_variant": true,
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/load.svg"
-dest_files=["res://.godot/imported/load.svg-c29ffef129393612a992e1c64a52566e.ctex"]
+source_file="res://assets/icons/mouse.svg"
+dest_files=["res://.godot/imported/mouse.svg-d76b68a3bb6a351a4c30c1789a8e904d.ctex"]
 
 [params]
 
@@ -33,5 +34,5 @@ process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
 svg/scale=4.0
-editor/scale_with_editor_scale=false
+editor/scale_with_editor_scale=true
 editor/convert_colors_with_editor_theme=false

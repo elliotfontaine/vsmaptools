@@ -1,13 +1,15 @@
-[gd_scene load_steps=9 format=3 uid="uid://dsog6tys60ik"]
+[gd_scene load_steps=11 format=3 uid="uid://dsog6tys60ik"]
 
 [ext_resource type="Script" uid="uid://m0ghr5qlq7h" path="res://scenes/main.gd" id="1_0xm2m"]
-[ext_resource type="Texture2D" uid="uid://ch8ryyqxqmnx6" path="res://assets/icons/Load.svg" id="1_ig7tw"]
+[ext_resource type="Texture2D" uid="uid://ch8ryyqxqmnx6" path="res://assets/icons/load.svg" id="1_ig7tw"]
 [ext_resource type="StyleBox" uid="uid://whi2rncot3p0" path="res://resources/title_panel.tres" id="2_lquwl"]
 [ext_resource type="PackedScene" uid="uid://bjduwlxxduy7l" path="res://scenes/bounds_square_view.tscn" id="3_1bvp3"]
 [ext_resource type="Script" uid="uid://biad503x385qg" path="res://addons/tnowe_extra_controls/elements/properties_box.gd" id="3_h2yge"]
 [ext_resource type="FontVariation" uid="uid://c5riwjed41xg" path="res://resources/embolden_inter.tres" id="3_tipki"]
 [ext_resource type="PackedScene" uid="uid://fv7lq3fnvbrb" path="res://scenes/map_preview.tscn" id="6_o6xl0"]
 [ext_resource type="FontFile" uid="uid://bctanex34iiej" path="res://assets/fonts/AtkynsonMonoNerdFontMono-Regular.otf" id="7_o6xl0"]
+[ext_resource type="Texture2D" uid="uid://cpau0ro2in8x6" path="res://assets/icons/mouse_left.svg" id="8_choun"]
+[ext_resource type="Texture2D" uid="uid://cafntwal5b77i" path="res://assets/icons/mouse_right.svg" id="9_ya4ey"]
 
 [node name="Main" type="ColorRect"]
 anchors_preset = 15
@@ -96,8 +98,11 @@ clip_text = true
 
 [node name="ImportButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/MapFile"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
 icon = ExtResource("1_ig7tw")
+icon_alignment = 1
+expand_icon = true
 
 [node name="MapInfo" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu"]
 layout_mode = 2
@@ -204,6 +209,10 @@ layout_mode = 2
 script = ExtResource("3_h2yge")
 metadata/_custom_type_script = "uid://biad503x385qg"
 
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
 [node name="ImageSize" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer"]
 layout_mode = 2
 
@@ -240,11 +249,61 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MapPreview" parent="MarginContainer/VSplitContainer/HSplitContainer" instance=ExtResource("6_o6xl0")]
-unique_name_in_owner = true
+[node name="Control" type="Control" parent="MarginContainer/VSplitContainer/HSplitContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.5
+
+[node name="MapPreview" parent="MarginContainer/VSplitContainer/HSplitContainer/Control" instance=ExtResource("6_o6xl0")]
+unique_name_in_owner = true
+layout_mode = 1
+size_flags_horizontal = 3
 size_flags_stretch_ratio = 3.5
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/Control"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -79.0
+offset_top = -29.0
+offset_right = 79.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/Control/MarginContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/Control/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_type_variation = &"ShadowTextLabel"
+text = "Select"
+horizontal_alignment = 2
+
+[node name="MouseIcon" type="TextureRect" parent="MarginContainer/VSplitContainer/HSplitContainer/Control/MarginContainer/HBoxContainer"]
+layout_mode = 2
+texture = ExtResource("8_choun")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="Label2" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/Control/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_type_variation = &"ShadowTextLabel"
+text = "    Move"
+horizontal_alignment = 2
+
+[node name="MouseIcon2" type="TextureRect" parent="MarginContainer/VSplitContainer/HSplitContainer/Control/MarginContainer/HBoxContainer"]
+layout_mode = 2
+texture = ExtResource("9_ya4ey")
+expand_mode = 2
+stretch_mode = 5
 
 [node name="LogsPanel" type="VBoxContainer" parent="MarginContainer/VSplitContainer"]
 layout_mode = 2
