@@ -7,9 +7,17 @@ signal position_changed(value: Vector2)
 @export var max_zoom := 5.0
 @export var zoom_factor := 0.1
 
-var zoom_level: float = 1
 var position_before_drag: Vector2
 var position_before_drag2: Vector2
+var zoom_level: float = 1:
+	set(value):
+		zoom_changed.emit(value)
+		zoom_level = value
+
+
+func _set(property, value):
+	if property == &"global_position":
+		position_changed.emit(global_position)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -52,4 +60,3 @@ func set_zoom_level(level: float, mouse_world_position := self.get_global_mouse_
 	
 	self.zoom = Vector2(zoom_level, zoom_level)
 	self.global_position = new_position
-	zoom_changed.emit(zoom_level)

@@ -55,47 +55,59 @@ metadata/_custom_type_script = "uid://dxi7mreotgdi"
 [node name="TopLeftInfoBox" type="MarginContainer" parent="."]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="TopLeftInfoBox"]
-layout_mode = 2
-
-[node name="BlockPos" type="HBoxContainer" parent="TopLeftInfoBox/VBoxContainer"]
-layout_mode = 2
-
-[node name="BlockPosTitle" type="Label" parent="TopLeftInfoBox/VBoxContainer/BlockPos"]
-layout_mode = 2
-theme_type_variation = &"ShadowTextLabel"
-text = "Block : "
-
-[node name="BlockPosLabel" type="Label" parent="TopLeftInfoBox/VBoxContainer/BlockPos"]
+[node name="InfoBoxVBoxContainer" type="VBoxContainer" parent="TopLeftInfoBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"ShadowTextLabel"
-text = "(-48, 314)"
 
-[node name="ChunkPos" type="HBoxContainer" parent="TopLeftInfoBox/VBoxContainer"]
+[node name="GridContainer" type="GridContainer" parent="TopLeftInfoBox/InfoBoxVBoxContainer"]
 layout_mode = 2
+size_flags_horizontal = 0
+columns = 2
 
-[node name="ChunkPosTitle" type="Label" parent="TopLeftInfoBox/VBoxContainer/ChunkPos"]
+[node name="BlockPosTitle" type="Label" parent="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer"]
+layout_mode = 2
+theme_type_variation = &"ShadowTextLabel"
+text = "Block :"
+
+[node name="BlockPosLineEdit" type="LineEdit" parent="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_force_pass_scroll_events = false
+theme_override_constants/minimum_character_width = 0
+text = "0,0"
+expand_to_text_length = true
+
+[node name="ChunkPosTitle" type="Label" parent="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer"]
 layout_mode = 2
 theme_type_variation = &"ShadowTextLabel"
 text = "Chunk : "
 
-[node name="ChunkPosLabel" type="Label" parent="TopLeftInfoBox/VBoxContainer/ChunkPos"]
+[node name="ChunkPosLineEdit" type="LineEdit" parent="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"ShadowTextLabel"
-text = "(-2, 10)"
+size_flags_horizontal = 0
+mouse_force_pass_scroll_events = false
+theme_override_constants/minimum_character_width = 0
+text = "0,0"
+expand_to_text_length = true
 
-[node name="Zoom" type="HBoxContainer" parent="TopLeftInfoBox/VBoxContainer"]
+[node name="BlockPos" type="HBoxContainer" parent="TopLeftInfoBox/InfoBoxVBoxContainer"]
 layout_mode = 2
 
-[node name="ZoomDecreaseButton" type="Button" parent="TopLeftInfoBox/VBoxContainer/Zoom"]
+[node name="ChunkPos" type="HBoxContainer" parent="TopLeftInfoBox/InfoBoxVBoxContainer"]
+layout_mode = 2
+
+[node name="Zoom" type="HBoxContainer" parent="TopLeftInfoBox/InfoBoxVBoxContainer"]
+layout_mode = 2
+
+[node name="ZoomDecreaseButton" type="Button" parent="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 text = "-"
 
-[node name="ZoomLabel" type="Label" parent="TopLeftInfoBox/VBoxContainer/Zoom"]
+[node name="ZoomLabel" type="Label" parent="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
@@ -104,12 +116,16 @@ text = "100%"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ZoomIncreaseButton" type="Button" parent="TopLeftInfoBox/VBoxContainer/Zoom"]
+[node name="ZoomIncreaseButton" type="Button" parent="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 text = "+"
 
 [connection signal="zoom_changed" from="SubViewport/PanZoomCamera" to="." method="_on_pan_zoom_camera_zoom_changed"]
-[connection signal="pressed" from="TopLeftInfoBox/VBoxContainer/Zoom/ZoomDecreaseButton" to="." method="_on_zoom_decrease_button_pressed"]
-[connection signal="pressed" from="TopLeftInfoBox/VBoxContainer/Zoom/ZoomIncreaseButton" to="." method="_on_zoom_increase_button_pressed"]
+[connection signal="focus_exited" from="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer/BlockPosLineEdit" to="." method="_on_block_pos_line_edit_focus_exited"]
+[connection signal="text_submitted" from="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer/BlockPosLineEdit" to="." method="_on_block_pos_line_edit_text_submitted"]
+[connection signal="focus_exited" from="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer/ChunkPosLineEdit" to="." method="_on_chunk_pos_line_edit_focus_exited"]
+[connection signal="text_submitted" from="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer/ChunkPosLineEdit" to="." method="_on_chunk_pos_line_edit_text_submitted"]
+[connection signal="pressed" from="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom/ZoomDecreaseButton" to="." method="_on_zoom_decrease_button_pressed"]
+[connection signal="pressed" from="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom/ZoomIncreaseButton" to="." method="_on_zoom_increase_button_pressed"]

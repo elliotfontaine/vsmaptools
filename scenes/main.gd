@@ -14,7 +14,6 @@ var _export_progress: int = 0:
 		_export_progress = value
 		export_progress_bar.value = value
 
-
 var min_X: int:
 	set(value): export_properties_box.set_value(&"Min X", value)
 	get: return export_properties_box.get_value(&"Min X")
@@ -56,6 +55,7 @@ var whole_map: bool:
 @onready var logs_rtl: RichTextLabel = %LogsRTL
 @onready var map_preview: MapPreview = %MapPreview
 @onready var version_tag: Label = %VersionTag
+
 
 func _ready() -> void:
 	_fill_export_properties_box()
@@ -289,6 +289,7 @@ func _export_options_are_valid() -> bool:
 
 func _on_filetype_option_button_item_selected(index: int) -> void:
 	export_type = EXPORT_TYPE.values()[index]
+
 
 func _on_selection_tool_selected(rect: Rect2) -> void:
 	var rect_i := Rect2i(rect)
