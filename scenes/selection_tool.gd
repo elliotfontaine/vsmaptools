@@ -35,7 +35,7 @@ func _input(event: InputEvent) -> void:
 
 	elif event is InputEventMouseMotion:
 		if is_selecting:
-			# Show selection box only when mouse is dragged and rect is larger than (32,32)
+			# Show selection box only when mouse is dragged and rect is larger than (2,2)
 			if selection_rect.size.length() > 2:
 				nine_patch_rect.visible = true
 			else:

@@ -204,6 +204,18 @@ layout_mode = 2
 script = ExtResource("3_h2yge")
 metadata/_custom_type_script = "uid://biad503x385qg"
 
+[node name="ImageSize" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ImageSizeTitle" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ImageSize"]
+layout_mode = 2
+text = "Current Size : "
+
+[node name="ImageSizeLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ImageSize"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "1,000 x 2,000"
+
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer"]
 layout_mode = 2
 
@@ -303,6 +315,7 @@ ignore_time_scale = true
 [connection signal="gui_input" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/MapFile/PanelContainer/FileLabel" to="." method="_on_file_label_gui_input"]
 [connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/Import/MapFile/ImportButton" to="." method="_on_import_button_pressed"]
 [connection signal="bool_changed" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/ExportOptions/ExportPropertiesBox" to="." method="_on_export_properties_box_bool_changed"]
+[connection signal="number_changed" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/ScrollContainer/LeftSideMenu/ExportOptions/ExportPropertiesBox" to="." method="_on_export_properties_box_number_changed"]
 [connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/HBoxContainer/ExportButton" to="." method="_on_export_button_pressed"]
 [connection signal="item_selected" from="MarginContainer/VSplitContainer/HSplitContainer/VBoxContainer/HBoxContainer/FiletypeOptionButton" to="." method="_on_filetype_option_button_item_selected"]
 [connection signal="file_selected" from="ImportFileDialog" to="." method="_on_file_dialog_file_selected"]

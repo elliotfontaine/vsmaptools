@@ -50,6 +50,7 @@ var whole_map: bool:
 @onready var bounds_square_view: BoundSquareView = %BoundsSquareView
 @onready var export_properties_box: PropertiesBox = %ExportPropertiesBox
 @onready var loading_map_container: HBoxContainer = %LoadingMapContainer
+@onready var image_size_label: Label = %ImageSizeLabel
 @onready var export_button: Button = %ExportButton
 @onready var export_progress_bar: ProgressBar = %ExportProgressBar
 @onready var logs_rtl: RichTextLabel = %LogsRTL
@@ -97,6 +98,17 @@ func update_displayed_bounds() -> void:
 		map.top_left_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative),
 		map.bottom_right_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative),
 	)
+
+
+func update_displayed_image_size() -> void:
+	var x := max_X - min_X
+	var z := max_Z - min_Z
+	if z > 16E3 or x > 16E3:
+		image_size_label.text = str(x) + " x " + str(z) + " (too large)"
+		image_size_label.add_theme_color_override("font_color", Color.RED)
+	else:
+		image_size_label.text = str(x) + " x " + str(z)
+		image_size_label.remove_theme_color_override("font_color")
 
 
 func _on_import_button_pressed() -> void:
@@ -200,11 +212,15 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 		update_displayed_bounds()
 
 
+func _on_export_properties_box_number_changed(_key: StringName, _new_value: bool) -> void:
+	update_displayed_image_size()
+
+
 func _on_export_button_pressed() -> void:
 	if not _export_options_are_valid():
 		return
 	if not map:
-		Logger.error("Cannot export since there isn't a loaded Map.")
+		Logger.error("Cannot export since there isn't a loaded map.")
 		return
 	
 	_export_progress = 0
@@ -267,7 +283,16 @@ func _on_file_label_gui_input(event: InputEvent) -> void:
 
 
 func _export_options_are_valid() -> bool:
+	if (max_X - min_X) > 16E3 or (max_X - min_X) > 16E3:
+		Logger.error(
+			"Images larger than 16k×16k are not supported due to internal limitations.",
+			&"main",
+			ERR_INVALID_DATA,
+		)
+		return false
+	
 	if whole_map:
+		Logger.debug("Export options are valid.")
 		return true
 	elif min_X == max_X and max_X == min_Z and min_Z == max_Z:
 		Logger.error(

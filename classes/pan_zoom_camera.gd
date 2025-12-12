@@ -15,9 +15,10 @@ var zoom_level: float = 1:
 		zoom_level = value
 
 
-func _set(property, value):
+func _set(property: StringName, _value: Variant) -> bool:
 	if property == &"global_position":
 		position_changed.emit(global_position)
+	return false
 
 
 func _unhandled_input(event: InputEvent) -> void:
