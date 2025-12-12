@@ -165,6 +165,9 @@ func _on_map_loading_completed() -> void:
 	map_loading_bar.value = 0.0
 	loaded_map_info.show()
 
+	if whole_map:
+		_set_selection_to_bounds()
+
 	import_button.disabled = false
 	export_button.disabled = false
 	
@@ -203,6 +206,17 @@ func _fill_export_properties_box() -> void:
 	export_properties_box.set_value(&"Spawnpoint Absolute Coordinates", 512000)
 
 
+func _set_selection_to_bounds() -> void:
+	var absolute_pos := export_properties_box.get_int(&"Spawnpoint Absolute Coordinates")
+	var is_relative := export_properties_box.get_bool(&"Use Relative Coordinates")
+	var tl := map.top_left_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
+	var br := (map.bottom_right_bound + Vector2i.ONE) * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
+	min_X = tl.x
+	max_X = br.x
+	min_Z = tl.y
+	max_Z = br.y
+
+
 func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> void:
 	if key == &"Use Relative Coordinates":
 		var diff := export_properties_box.get_int(&"Spawnpoint Absolute Coordinates")
@@ -220,16 +234,9 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 			export_properties_box.toggle_editor(&"Min Z", false)
 			export_properties_box.toggle_editor(&"Max Z", false)
 			if not map:
-				Logger.warn("You should load a map from file first.")
+				Logger.warn("No map loaded. Please load a map first.")
 				return
-			var absolute_pos := export_properties_box.get_int(&"Spawnpoint Absolute Coordinates")
-			var is_relative := export_properties_box.get_bool(&"Use Relative Coordinates")
-			var tl := map.top_left_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
-			var br := (map.bottom_right_bound + Vector2i.ONE) * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
-			min_X = tl.x
-			max_X = br.x
-			min_Z = tl.y
-			max_Z = br.y
+			_set_selection_to_bounds()
 		else:
 			export_properties_box.toggle_editor(&"Min X", true)
 			export_properties_box.toggle_editor(&"Max X", true)
