@@ -176,6 +176,21 @@ func set_value_at(index : int, value: Variant) -> void:
 	elif editor is UnfoldedOptionButton and value is int: editor.value = value
 	else: push_error("Could not set value.")
 
+## Enable/disable an editor. Doesn't work with UnfoldedOptionButton
+func toggle_editor(key: StringName, enable: bool) -> void:
+	if _keys.has(key):
+		toggle_editor_at(_keys[key], enable)
+	else:
+		push_error("Key '", key, "' not found.")
+
+func toggle_editor_at(index : int, editable: bool) -> void:
+	var editor = _editors[index]
+	if editor is Button: editor.disabled = !editable
+	elif editor is SpinBox: editor.editable = editable
+	elif editor is LineEdit: editor.editable = editable
+	elif editor is TextEdit: editor.editable = editable
+	else: push_error("Could not set value.")
+
 ## Retrieve a boolean.
 func get_bool(key : StringName) -> bool:
 	var editor: Button = _editors[_keys[key]]
