@@ -210,6 +210,29 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 		min_Z += diff * diff_sign
 		max_Z += diff * diff_sign
 		update_displayed_bounds()
+	
+	if key == &"Whole Map":
+		if is_true:
+			export_properties_box.toggle_editor(&"Min X", false)
+			export_properties_box.toggle_editor(&"Max X", false)
+			export_properties_box.toggle_editor(&"Min Z", false)
+			export_properties_box.toggle_editor(&"Max Z", false)
+			if not map:
+				Logger.warn("You should load a map from file first.")
+				return
+			var absolute_pos := export_properties_box.get_int(&"Spawnpoint Absolute Coordinates")
+			var is_relative := export_properties_box.get_bool(&"Use Relative Coordinates")
+			var tl := map.top_left_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
+			var br := map.bottom_right_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
+			min_X = tl.x
+			max_X = br.x
+			min_Z = tl.y
+			max_Z = br.y
+		else:
+			export_properties_box.toggle_editor(&"Min X", true)
+			export_properties_box.toggle_editor(&"Max X", true)
+			export_properties_box.toggle_editor(&"Min Z", true)
+			export_properties_box.toggle_editor(&"Max Z", true)
 
 
 func _on_export_properties_box_number_changed(_key: StringName, _new_value: bool) -> void:
@@ -317,6 +340,8 @@ func _on_filetype_option_button_item_selected(index: int) -> void:
 
 
 func _on_selection_tool_selected(rect: Rect2) -> void:
+	if whole_map:
+		whole_map = false
 	var rect_i := Rect2i(rect)
 	min_X = rect_i.position.x + (spawnpoint_coords * int(!use_relative_coords))
 	min_Z = rect_i.position.y + (spawnpoint_coords * int(!use_relative_coords))
