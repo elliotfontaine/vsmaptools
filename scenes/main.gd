@@ -9,11 +9,6 @@ var db: SQLite = null
 var map: Map
 var export_type := EXPORT_TYPE.PNG
 
-var _export_progress: int = 0:
-	set(value):
-		_export_progress = value
-		export_progress_bar.value = value
-
 var min_X: int:
 	set(value): export_properties_box.set_value(&"Min X", value)
 	get: return export_properties_box.get_value(&"Min X")
@@ -35,6 +30,13 @@ var spawnpoint_coords: int:
 var whole_map: bool:
 	set(value): export_properties_box.set_value(&"Whole Map", value)
 	get: return export_properties_box.get_value(&"Whole Map")
+
+var _export_progress: int = 0:
+	set(value):
+		_export_progress = value
+		export_progress_bar.value = value
+
+var _target_path: String
 
 @onready var timer: Timer = %Timer
 @onready var file_label: Label = %FileLabel
@@ -246,6 +248,18 @@ func _on_export_button_pressed() -> void:
 		Logger.error("Cannot export since there isn't a loaded map.")
 		return
 	
+	match export_type:
+		EXPORT_TYPE.PNG:
+			export_file_dialog.set_current_file("vintage_story_map.png")
+		EXPORT_TYPE.JPEG:
+			export_file_dialog.set_current_file("vintage_story_map.jpg")
+		_:
+			export_file_dialog.set_current_file("vintage_story_map.png")
+	export_file_dialog.popup()
+
+
+func _on_export_file_dialog_file_selected(path: String) -> void:
+	_target_path = path
 	_export_progress = 0
 	export_progress_bar.show()
 	import_button.disabled = true
@@ -273,29 +287,20 @@ func _on_export_button_pressed() -> void:
 func _on_export_image_ready() -> void:
 	Logger.info("Image processing completed.")
 	export_progress_bar.hide()
-	match export_type:
-		EXPORT_TYPE.PNG:
-			export_file_dialog.set_current_file("vintage_story_map.png")
-		EXPORT_TYPE.JPEG:
-			export_file_dialog.set_current_file("vintage_story_map.jpg")
-		_:
-			export_file_dialog.set_current_file("vintage_story_map.png")
+	
 	import_button.disabled = false
 	export_button.disabled = false
-	export_file_dialog.popup()
-	
 
-func _on_export_file_dialog_file_selected(path: String) -> void:
 	var img := map.get_export_image()
 	if img:
-		Logger.info("Saving image to file: %s" % path)
+		Logger.info("Saving image to file: %s" % _target_path)
 		match export_type:
 			EXPORT_TYPE.PNG:
-				img.save_png(path)
+				img.save_png(_target_path)
 			EXPORT_TYPE.JPEG:
-				img.save_jpg(path, 0.75)
+				img.save_jpg(_target_path, 0.75)
 			_:
-				img.save_png(path)
+				img.save_png(_target_path)
 	else:
 		Logger.error("No export image ready", &"main", ERR_DOES_NOT_EXIST)
 
