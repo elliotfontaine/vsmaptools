@@ -168,7 +168,7 @@ func set_value(key: StringName, value: Variant) -> void:
 
 func set_value_at(index : int, value: Variant) -> void:
 	var editor = _editors[index]
-	if editor is Button and value is bool: editor.pressed = value
+	if editor is Button and value is bool: editor.button_pressed = value
 	elif editor is SpinBox and value is float: editor.value = value
 	elif editor is SpinBox and value is int: editor.value = value
 	elif editor is LineEdit and value is String: editor.text = value
