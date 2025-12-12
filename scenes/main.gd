@@ -107,7 +107,7 @@ func update_displayed_image_size() -> void:
 	var z := max_Z - min_Z
 	if z > 16E3 or x > 16E3:
 		image_size_label.text = str(x) + " x " + str(z) + " (too large)"
-		image_size_label.add_theme_color_override("font_color", Color.RED)
+		image_size_label.add_theme_color_override("font_color", Color.ORANGE_RED)
 	else:
 		image_size_label.text = str(x) + " x " + str(z)
 		image_size_label.remove_theme_color_override("font_color")
@@ -311,7 +311,7 @@ func _on_file_label_gui_input(event: InputEvent) -> void:
 
 
 func _export_options_are_valid() -> bool:
-	if (max_X - min_X) > 16E3 or (max_X - min_X) > 16E3:
+	if (max_X - min_X) > 16E3 or (max_Z - min_Z) > 16E3:
 		Logger.error(
 			"Images larger than 16k×16k are not supported due to internal limitations.",
 			&"main",
