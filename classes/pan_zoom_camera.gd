@@ -3,6 +3,8 @@ class_name PanZoomCamera extends Camera2D
 signal zoom_changed(value: float)
 signal position_changed(value: Vector2)
 
+const PAN_SPEED := 10
+
 @export var min_zoom := 0.1
 @export var max_zoom := 5.0
 @export var zoom_factor := 0.1
@@ -34,7 +36,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		position_before_drag = Vector2.ZERO
 	elif event is InputEventPanGesture:
 		var pan_gesture := event as InputEventPanGesture
-		self.global_position += pan_gesture.delta * 20
+		self.global_position += pan_gesture.delta * PAN_SPEED / zoom_level
 	elif event is InputEventScreenDrag:
 		var screen_drag := event as InputEventScreenDrag
 		self.global_position -= screen_drag.relative
