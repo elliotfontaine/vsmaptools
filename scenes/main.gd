@@ -176,6 +176,7 @@ func _on_map_loading_completed() -> void:
 			Vector2i(spawnpoint_coords, spawnpoint_coords) / map.CHUNK_SIZE
 		)
 	)
+	map_preview.center_view()
 
 
 func _on_map_export_progressed(percent: int) -> void:

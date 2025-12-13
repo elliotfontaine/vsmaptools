@@ -84,3 +84,7 @@ ShadowTextLabel/constants/shadow_outline_size = 8
 SplitContainer/constants/autohide = 0
 SplitContainer/constants/separation = 4
 SplitContainer/styles/split_bar_background = SubResource("StyleBoxFlat_58jnp")
+ZoomButton/base_type = &"Button"
+ZoomButton/colors/icon_hover_color = Color(1, 1, 1, 1)
+ZoomButton/colors/icon_normal_color = Color(0.67451, 0.67451, 0.67451, 1)
+ZoomButton/colors/icon_pressed_color = Color(0.196078, 0.803922, 0.196078, 1)

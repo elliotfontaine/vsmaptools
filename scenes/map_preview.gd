@@ -44,6 +44,11 @@ func draw_silhouette_preview(relative_chunk_positions: Array[Vector2i]) -> void:
 		tilemap.set_cell(chunk_pos, 0, Vector2i(1, 0))
 
 
+func center_view() -> void:
+	var center := tilemap.get_used_rect().get_center() * Map.CHUNK_SIZE
+	cam.global_position = center
+
+
 func _process_block_line_edit_change() -> void:
 	var parsed := _parse_vector2i(block_pos_line_edit.text)
 	
@@ -106,6 +111,10 @@ func _on_zoom_increase_button_pressed() -> void:
 
 func _on_zoom_decrease_button_pressed() -> void:
 	cam.set_zoom_level(cam.zoom.x / 1.5, cam.position)
+
+
+func _on_center_view_button_pressed() -> void:
+	center_view()
 
 
 func _on_pan_zoom_camera_zoom_changed(value: float) -> void:

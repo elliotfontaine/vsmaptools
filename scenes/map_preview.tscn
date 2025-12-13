@@ -1,10 +1,13 @@
-[gd_scene load_steps=8 format=3 uid="uid://fv7lq3fnvbrb"]
+[gd_scene load_steps=15 format=3 uid="uid://fv7lq3fnvbrb"]
 
 [ext_resource type="Texture2D" uid="uid://b5lyswsucyvur" path="res://assets/tiles.png" id="1_o31dl"]
 [ext_resource type="Script" uid="uid://bel5p7ulklptq" path="res://scenes/map_preview.gd" id="1_wn4pc"]
 [ext_resource type="Script" uid="uid://dxi7mreotgdi" path="res://classes/pan_zoom_camera.gd" id="1_xyrje"]
 [ext_resource type="PackedScene" uid="uid://7saafgael53k" path="res://scenes/selection_tool.tscn" id="4_2fjyl"]
 [ext_resource type="Script" uid="uid://bw86qbb1n2jab" path="res://classes/map_view_grid.gd" id="4_d3m4o"]
+[ext_resource type="Texture2D" uid="uid://batmq6x2k5iui" path="res://assets/icons/center_view.svg" id="6_bwlvg"]
+[ext_resource type="Texture2D" uid="uid://djphkij38be7f" path="res://assets/icons/zoom_less.svg" id="6_dbd1m"]
+[ext_resource type="Texture2D" uid="uid://y4tw4llur8wu" path="res://assets/icons/zoom_more.svg" id="7_wjx2p"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wn4pc"]
 texture = ExtResource("1_o31dl")
@@ -15,6 +18,22 @@ texture_region_size = Vector2i(32, 32)
 [sub_resource type="TileSet" id="TileSet_xvuvo"]
 tile_size = Vector2i(32, 32)
 sources/0 = SubResource("TileSetAtlasSource_wn4pc")
+
+[sub_resource type="InputEventKey" id="InputEventKey_bwlvg"]
+device = -1
+command_or_control_autoremap = true
+keycode = 45
+
+[sub_resource type="Shortcut" id="Shortcut_i805t"]
+events = [SubResource("InputEventKey_bwlvg")]
+
+[sub_resource type="InputEventKey" id="InputEventKey_frbta"]
+device = -1
+command_or_control_autoremap = true
+keycode = 61
+
+[sub_resource type="Shortcut" id="Shortcut_rqd5i"]
+events = [SubResource("InputEventKey_frbta")]
 
 [node name="MapPreview" type="SubViewportContainer"]
 anchors_preset = 15
@@ -58,6 +77,58 @@ layout_mode = 2
 [node name="InfoBoxVBoxContainer" type="VBoxContainer" parent="TopLeftInfoBox"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Zoom" type="HBoxContainer" parent="TopLeftInfoBox/InfoBoxVBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 0
+
+[node name="CenterViewButton" type="Button" parent="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom"]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+tooltip_text = "Center View"
+focus_mode = 0
+icon = ExtResource("6_bwlvg")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="ZoomDecreaseButton" type="Button" parent="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(26, 0)
+layout_mode = 2
+tooltip_text = "Zoom Out"
+focus_mode = 0
+theme_type_variation = &"ZoomButton"
+shortcut = SubResource("Shortcut_i805t")
+icon = ExtResource("6_dbd1m")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="ZoomLabel" type="Label" parent="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"ShadowTextLabel"
+text = "100%"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ZoomIncreaseButton" type="Button" parent="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(26, 0)
+layout_mode = 2
+tooltip_text = "Zoom In"
+focus_mode = 0
+theme_type_variation = &"ZoomButton"
+shortcut = SubResource("Shortcut_rqd5i")
+icon = ExtResource("7_wjx2p")
+flat = true
+icon_alignment = 1
+expand_icon = true
 
 [node name="GridContainer" type="GridContainer" parent="TopLeftInfoBox/InfoBoxVBoxContainer"]
 layout_mode = 2
@@ -92,40 +163,11 @@ theme_override_constants/minimum_character_width = 0
 text = "0,0"
 expand_to_text_length = true
 
-[node name="BlockPos" type="HBoxContainer" parent="TopLeftInfoBox/InfoBoxVBoxContainer"]
-layout_mode = 2
-
-[node name="ChunkPos" type="HBoxContainer" parent="TopLeftInfoBox/InfoBoxVBoxContainer"]
-layout_mode = 2
-
-[node name="Zoom" type="HBoxContainer" parent="TopLeftInfoBox/InfoBoxVBoxContainer"]
-layout_mode = 2
-
-[node name="ZoomDecreaseButton" type="Button" parent="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-text = "-"
-
-[node name="ZoomLabel" type="Label" parent="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(50, 0)
-layout_mode = 2
-theme_type_variation = &"ShadowTextLabel"
-text = "100%"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="ZoomIncreaseButton" type="Button" parent="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-text = "+"
-
 [connection signal="zoom_changed" from="SubViewport/PanZoomCamera" to="." method="_on_pan_zoom_camera_zoom_changed"]
+[connection signal="pressed" from="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom/CenterViewButton" to="." method="_on_center_view_button_pressed"]
+[connection signal="pressed" from="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom/ZoomDecreaseButton" to="." method="_on_zoom_decrease_button_pressed"]
+[connection signal="pressed" from="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom/ZoomIncreaseButton" to="." method="_on_zoom_increase_button_pressed"]
 [connection signal="focus_exited" from="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer/BlockPosLineEdit" to="." method="_on_block_pos_line_edit_focus_exited"]
 [connection signal="text_submitted" from="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer/BlockPosLineEdit" to="." method="_on_block_pos_line_edit_text_submitted"]
 [connection signal="focus_exited" from="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer/ChunkPosLineEdit" to="." method="_on_chunk_pos_line_edit_focus_exited"]
 [connection signal="text_submitted" from="TopLeftInfoBox/InfoBoxVBoxContainer/GridContainer/ChunkPosLineEdit" to="." method="_on_chunk_pos_line_edit_text_submitted"]
-[connection signal="pressed" from="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom/ZoomDecreaseButton" to="." method="_on_zoom_decrease_button_pressed"]
-[connection signal="pressed" from="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom/ZoomIncreaseButton" to="." method="_on_zoom_increase_button_pressed"]
