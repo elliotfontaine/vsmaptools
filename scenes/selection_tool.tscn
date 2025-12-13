@@ -9,7 +9,7 @@ script = ExtResource("1_irsra")
 [node name="NinePatchRect" type="NinePatchRect" parent="."]
 unique_name_in_owner = true
 visible = false
-modulate = Color(0.592157, 1, 1, 1)
+modulate = Color(0.592157, 1, 1, 0.756863)
 texture_filter = 1
 offset_right = 40.0
 offset_bottom = 40.0
