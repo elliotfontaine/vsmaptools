@@ -39,11 +39,18 @@ layout_mode = 2
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="LeftSideMenu" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VSplitContainer/HSplitContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 4
+
+[node name="LeftSideMenu" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu"]
 layout_mode = 2
 size_flags_vertical = 3
 size_flags_stretch_ratio = 20.0
@@ -51,47 +58,55 @@ follow_focus = true
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 4
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 32
 
-[node name="Import" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer"]
+[node name="Import" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import"]
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import"]
 layout_mode = 2
 
-[node name="ImportTitle" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import"]
+[node name="ImportTitle" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import"]
 layout_mode = 2
 theme_override_styles/panel = ExtResource("2_lquwl")
 
-[node name="ImportTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import/ImportTitle"]
+[node name="ImportTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/ImportTitle"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("3_tipki")
 text = "Import"
 horizontal_alignment = 1
 
-[node name="MapFile" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import"]
+[node name="MapFile" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import/MapFile"]
+[node name="Label" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile"]
 layout_mode = 2
 text = "Map File"
 
-[node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import/MapFile"]
+[node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile"]
 layout_mode = 2
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 15
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 15
 
-[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import/MapFile"]
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="FileLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import/MapFile/PanelContainer"]
+[node name="FileLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile/PanelContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
@@ -100,7 +115,7 @@ text = "<empty>"
 horizontal_alignment = 1
 clip_text = true
 
-[node name="ImportButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import/MapFile"]
+[node name="ImportButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
@@ -108,140 +123,140 @@ icon = ExtResource("1_ig7tw")
 icon_alignment = 1
 expand_icon = true
 
-[node name="MapInfo" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer"]
+[node name="MapInfo" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo"]
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo"]
 layout_mode = 2
 
-[node name="MapInfoTitle" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo"]
+[node name="MapInfoTitle" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo"]
 layout_mode = 2
 theme_override_styles/panel = ExtResource("2_lquwl")
 
-[node name="MapInfoTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/MapInfoTitle"]
+[node name="MapInfoTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/MapInfoTitle"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("3_tipki")
 text = "Map Info"
 horizontal_alignment = 1
 
-[node name="MapInfoHint" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo"]
+[node name="MapInfoHint" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.560955, 0.560955, 0.560955, 1)
 text = "Import a map file to inspect it."
 
-[node name="LoadingMapContainer" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo"]
+[node name="LoadingMapContainer" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="LoadingLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadingMapContainer"]
+[node name="LoadingLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadingMapContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 text = "Loading..."
 
-[node name="MapLoadingBar" type="ProgressBar" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadingMapContainer"]
+[node name="MapLoadingBar" type="ProgressBar" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadingMapContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="LoadedMapInfo" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo"]
+[node name="LoadedMapInfo" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ChunksNumber" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadedMapInfo"]
+[node name="ChunksNumber" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo"]
 layout_mode = 2
 
-[node name="ChunksNumberLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadedMapInfo/ChunksNumber"]
+[node name="ChunksNumberLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/ChunksNumber"]
 layout_mode = 2
 text = "Discovered Chunks  "
 
-[node name="ChunksNumberValue" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadedMapInfo/ChunksNumber"]
+[node name="ChunksNumberValue" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/ChunksNumber"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 10
 text = "?"
 
-[node name="MapDensity" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadedMapInfo"]
+[node name="MapDensity" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo"]
 layout_mode = 2
 
-[node name="MapDensityLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadedMapInfo/MapDensity"]
+[node name="MapDensityLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/MapDensity"]
 layout_mode = 2
 text = "Density  "
 
-[node name="MapDensityValue" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadedMapInfo/MapDensity"]
+[node name="MapDensityValue" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/MapDensity"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 10
 text = "?"
 
-[node name="BoundsSquare" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadedMapInfo"]
+[node name="BoundsSquare" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo"]
 layout_mode = 2
 
-[node name="BoundsTitle" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare"]
+[node name="BoundsTitle" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare"]
 layout_mode = 2
 size_flags_vertical = 0
 text = "Map Bounds
 (in blocks)  "
 
-[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare"]
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare"]
 layout_mode = 2
 size_flags_horizontal = 10
 
-[node name="BoundsSquareView" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare/PanelContainer" instance=ExtResource("3_1bvp3")]
+[node name="BoundsSquareView" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare/PanelContainer" instance=ExtResource("3_1bvp3")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Selection" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer"]
+[node name="Selection" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Selection"]
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Selection"]
 layout_mode = 2
 
-[node name="ExportOptionsTitle" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Selection"]
+[node name="ExportOptionsTitle" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Selection"]
 layout_mode = 2
 theme_override_styles/panel = ExtResource("2_lquwl")
 
-[node name="ExportOptionsTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Selection/ExportOptionsTitle"]
+[node name="ExportOptionsTitleLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Selection/ExportOptionsTitle"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("3_tipki")
 text = "Selection"
 horizontal_alignment = 1
 
-[node name="ExportPropertiesBox" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Selection"]
+[node name="ExportPropertiesBox" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Selection"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("3_h2yge")
 metadata/_custom_type_script = "uid://biad503x385qg"
 
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu"]
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="ImageSize" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu"]
+[node name="ImageSize" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu"]
 layout_mode = 2
 
-[node name="ImageSizeTitle" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ImageSize"]
+[node name="ImageSizeTitle" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ImageSize"]
 layout_mode = 2
 text = "Current Size : "
 
-[node name="ImageSizeLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ImageSize"]
+[node name="ImageSizeLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ImageSize"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "1,000 x 2,000"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu"]
+[node name="Export" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu"]
 layout_mode = 2
 
-[node name="ExportButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/HBoxContainer"]
+[node name="ExportButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 10
 text = "Export Image"
 
-[node name="FiletypeOptionButton" type="OptionButton" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/HBoxContainer"]
+[node name="FiletypeOptionButton" type="OptionButton" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export"]
 layout_mode = 2
 selected = 0
 item_count = 2
@@ -250,7 +265,7 @@ popup/item_0/id = 0
 popup/item_1/text = "JPEG"
 popup/item_1/id = 1
 
-[node name="ExportProgressBar" type="ProgressBar" parent="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/HBoxContainer"]
+[node name="ExportProgressBar" type="ProgressBar" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -377,12 +392,12 @@ wait_time = 0.5
 autostart = true
 ignore_time_scale = true
 
-[connection signal="gui_input" from="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import/MapFile/PanelContainer/FileLabel" to="." method="_on_file_label_gui_input"]
-[connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Import/MapFile/ImportButton" to="." method="_on_import_button_pressed"]
-[connection signal="bool_changed" from="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Selection/ExportPropertiesBox" to="." method="_on_export_properties_box_bool_changed"]
-[connection signal="number_changed" from="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/ScrollContainer/VBoxContainer/Selection/ExportPropertiesBox" to="." method="_on_export_properties_box_number_changed"]
-[connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/HBoxContainer/ExportButton" to="." method="_on_export_button_pressed"]
-[connection signal="item_selected" from="MarginContainer/VSplitContainer/HSplitContainer/LeftSideMenu/HBoxContainer/FiletypeOptionButton" to="." method="_on_filetype_option_button_item_selected"]
+[connection signal="gui_input" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile/PanelContainer/FileLabel" to="." method="_on_file_label_gui_input"]
+[connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile/ImportButton" to="." method="_on_import_button_pressed"]
+[connection signal="bool_changed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Selection/ExportPropertiesBox" to="." method="_on_export_properties_box_bool_changed"]
+[connection signal="number_changed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Selection/ExportPropertiesBox" to="." method="_on_export_properties_box_number_changed"]
+[connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export/ExportButton" to="." method="_on_export_button_pressed"]
+[connection signal="item_selected" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export/FiletypeOptionButton" to="." method="_on_filetype_option_button_item_selected"]
 [connection signal="file_selected" from="ImportFileDialog" to="." method="_on_file_dialog_file_selected"]
 [connection signal="file_selected" from="ExportFileDialog" to="." method="_on_export_file_dialog_file_selected"]
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
