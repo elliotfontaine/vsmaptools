@@ -11,7 +11,7 @@ const STEP_SIZE_PERCENT := 0.02
 const N_BATCHES := 100
 
 @warning_ignore_start("narrowing_conversion")
-const DEFAULT_WORLD_SIZE: int = 1024E3
+const DEFAULT_WORLD_SIZE := Vector2i(1024E3, 1024E3)
 const WORLD_SIZE_PRESETS: Array[int] = [
 	32, 64, 128, 256, 384, 512, 1024, 5120, 10240, 25600, 51200,
 	102400, 128E3, 256E3, 384E3, 512E3, 600E3, 1024E3, 2048E3, 4096E3, 8192E3
@@ -189,7 +189,7 @@ func _set_chunks_count() -> void:
 
 
 func _guess_world_size() -> Vector2i:
-	const fallback_value := Vector2i(DEFAULT_WORLD_SIZE, DEFAULT_WORLD_SIZE)
+	const fallback_value := DEFAULT_WORLD_SIZE
 
 	if top_left_chunk == Vector2i.MAX or bottom_right_chunk == Vector2i.MIN:
 		return fallback_value
@@ -208,7 +208,7 @@ func _guess_world_size() -> Vector2i:
 	# Choose the preset whose center is the closest to the explored region center
 	var pick_best_size := func(possible_sizes: Array[int], explored_axis_center: int) -> int:
 		if possible_sizes.is_empty():
-			return DEFAULT_WORLD_SIZE
+			return fallback_value.x
 		var best_fit_size := possible_sizes[0]
 		@warning_ignore("integer_division")
 		var best_fit_dist := absi(best_fit_size / 2 - explored_axis_center)

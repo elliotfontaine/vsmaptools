@@ -10,8 +10,6 @@ enum BoxProperty {
 	WHOLE_MAP,
 	WORLD_SIZE_X,
 	WORLD_SIZE_Z,
-	
-	SPAWNPOINT, # to be dropped in favor of WORLD_SIZE_X / WORLD_SIZE_Z
 }
 
 const VERBOSITY: SQLite.VerbosityLevel = SQLite.NORMAL
@@ -25,10 +23,8 @@ const PROP_STRINGNAMES: Dictionary[BoxProperty, StringName]= {
 	BoxProperty.MAX_Z: &"Max Z",
 	BoxProperty.USE_RELATIVE: &"Use Relative Coordinates",
 	BoxProperty.WHOLE_MAP: &"Whole Map",
-	BoxProperty.WORLD_SIZE_X: &"World Size (X)",
-	BoxProperty.WORLD_SIZE_Z: &"World Size (Z)",
-	
-	BoxProperty.SPAWNPOINT : &"Spawnpoint Absolute Coordinates",
+	BoxProperty.WORLD_SIZE_X: &"World Size (X axis)",
+	BoxProperty.WORLD_SIZE_Z: &"World Size (Z axis)",
 }
 
 var db: SQLite = null
@@ -51,12 +47,19 @@ var max_Z: int:
 var use_relative_coords: bool:
 	set(value): _set_box_property(BoxProperty.USE_RELATIVE, value)
 	get: return _get_box_property(BoxProperty.USE_RELATIVE)
-var spawnpoint_coords: int:
-	set(value): _set_box_property(BoxProperty.SPAWNPOINT, value)
-	get: return _get_box_property(BoxProperty.SPAWNPOINT)
 var whole_map: bool:
 	set(value): _set_box_property(BoxProperty.WHOLE_MAP, value)
 	get: return _get_box_property(BoxProperty.WHOLE_MAP)
+var world_size: Vector2i:
+	set(value):
+		_set_box_property(BoxProperty.WORLD_SIZE_X, value.x)
+		_set_box_property(BoxProperty.WORLD_SIZE_Z, value.y)
+	get: return Vector2i(
+		_get_box_property(BoxProperty.WORLD_SIZE_X),
+		_get_box_property(BoxProperty.WORLD_SIZE_Z)
+	)
+var spawnpoint_abs: Vector2i:
+	get: return world_size / 2
 
 var _export_progress: int = 0:
 	set(value):
@@ -115,8 +118,8 @@ func update_displayed_bounds() -> void:
 	if not map:
 		return
 	bounds_square_view.set_bounds_from_vect(
-		map.top_left_block - Vector2i.ONE * spawnpoint_coords * int(use_relative_coords),
-		map.bottom_right_block - Vector2i.ONE * spawnpoint_coords * int(use_relative_coords),
+		map.top_left_block - spawnpoint_abs * int(use_relative_coords),
+		map.bottom_right_block - spawnpoint_abs * int(use_relative_coords),
 	)
 
 
@@ -189,9 +192,13 @@ func _on_map_loading_completed() -> void:
 	import_button.disabled = false
 	export_button.disabled = false
 	
+	world_size = map.world_size
+	if world_size != Map.DEFAULT_WORLD_SIZE:
+		Logger.info("World uses a custom size: %s" % world_size)
+
 	map_preview.draw_silhouette_preview(
 		map.get_pieces_relative_chunk_positions(
-			Vector2i(spawnpoint_coords, spawnpoint_coords) / map.CHUNK_SIZE
+			spawnpoint_abs / map.CHUNK_SIZE
 		)
 	)
 	map_preview.center_view()
@@ -221,13 +228,15 @@ func _fill_export_properties_box() -> void:
 	export_properties_box.end_group()
 	export_properties_box.add_group("Advanced Options", true)
 	export_properties_box.add_bool(PROP_STRINGNAMES[BoxProperty.USE_RELATIVE], true)
-	export_properties_box.add_int(PROP_STRINGNAMES[BoxProperty.SPAWNPOINT])
-	_set_box_property(BoxProperty.SPAWNPOINT, 512000)
+	export_properties_box.add_int(PROP_STRINGNAMES[BoxProperty.WORLD_SIZE_X])
+	export_properties_box.add_int(PROP_STRINGNAMES[BoxProperty.WORLD_SIZE_Z])
+	_set_box_property(BoxProperty.WORLD_SIZE_X, Map.DEFAULT_WORLD_SIZE.x)
+	_set_box_property(BoxProperty.WORLD_SIZE_Z, Map.DEFAULT_WORLD_SIZE.y)
 
 
 func _set_selection_to_bounds() -> void:
-	var tl := map.top_left_block - Vector2i.ONE * spawnpoint_coords * int(use_relative_coords)
-	var br := map.bottom_right_block - Vector2i.ONE * spawnpoint_coords * int(use_relative_coords)
+	var tl := map.top_left_block - spawnpoint_abs * int(use_relative_coords)
+	var br := map.bottom_right_block - spawnpoint_abs * int(use_relative_coords)
 	min_X = tl.x
 	max_X = br.x
 	min_Z = tl.y
@@ -253,12 +262,12 @@ func _get_box_property(property: BoxProperty) -> Variant:
 
 func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> void:
 	if key == PROP_STRINGNAMES[BoxProperty.USE_RELATIVE]:
-		var diff := spawnpoint_coords
+		var diff := spawnpoint_abs
 		var diff_sign := -1 if is_true else 1
-		min_X += diff * diff_sign
-		max_X += diff * diff_sign
-		min_Z += diff * diff_sign
-		max_Z += diff * diff_sign
+		min_X += diff.x * diff_sign
+		max_X += diff.x * diff_sign
+		min_Z += diff.y * diff_sign
+		max_Z += diff.y * diff_sign
 		update_displayed_bounds()
 	
 	if key == PROP_STRINGNAMES[BoxProperty.WHOLE_MAP]:
@@ -280,7 +289,7 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 
 func _on_export_properties_box_number_changed(_key: StringName, _new_value: bool) -> void:
 	update_displayed_image_size() # for changes to min_X, max_X, min_Z, max_Z
-	update_displayed_bounds() # for changes to spawnpoint_coords
+	update_displayed_bounds() # for changes to spawnpoint_abs
 
 
 func _on_export_button_pressed() -> void:
@@ -315,8 +324,8 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 		Logger.info("Exporting whole map. Bounds: {0}, {1}".format([topleft, bottomright]))
 	else:
 		if use_relative_coords:
-			topleft = Vector2i(min_X + spawnpoint_coords, min_Z + spawnpoint_coords)
-			bottomright = Vector2i(max_X + spawnpoint_coords, max_Z + spawnpoint_coords)
+			topleft = Vector2i(min_X, min_Z) + spawnpoint_abs
+			bottomright = Vector2i(max_X, max_Z) + spawnpoint_abs
 		else:
 			topleft = Vector2i(min_X, min_Z)
 			bottomright = Vector2i(max_X, max_Z)
@@ -391,7 +400,7 @@ func _on_selection_tool_selected(rect: Rect2) -> void:
 	if whole_map:
 		whole_map = false
 	var rect_i := Rect2i(rect)
-	min_X = rect_i.position.x + (spawnpoint_coords * int(!use_relative_coords))
-	min_Z = rect_i.position.y + (spawnpoint_coords * int(!use_relative_coords))
-	max_X = rect_i.end.x + (spawnpoint_coords * int(!use_relative_coords))
-	max_Z = rect_i.end.y + (spawnpoint_coords * int(!use_relative_coords))
+	min_X = rect_i.position.x + (spawnpoint_abs.x * int(!use_relative_coords))
+	min_Z = rect_i.position.y + (spawnpoint_abs.y * int(!use_relative_coords))
+	max_X = rect_i.end.x + (spawnpoint_abs.x * int(!use_relative_coords))
+	max_Z = rect_i.end.y + (spawnpoint_abs.y * int(!use_relative_coords))
