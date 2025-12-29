@@ -111,13 +111,6 @@ func _ready() -> void:
 	Logger.info("Renderer: %s" % RenderingServer.get_video_adapter_name())
 
 
-func get_filename_from_path(path: String) -> String:
-	if path.is_absolute_path() or path.is_relative_path():
-		return path.split("/")[-1]
-	else:
-		return ""
-
-
 func update_displayed_bounds() -> void:
 	if not map:
 		return
@@ -152,7 +145,7 @@ func _on_file_dialog_file_selected(path: String) -> void:
 	Logger.debug("New SQLite database access with verbosity level: %s" % VERBOSITY)
 
 	Logger.info("Loading map file at " + path)
-	file_label.text = get_filename_from_path(path)
+	file_label.text = path.get_file()
 	file_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	
 	import_button.disabled = true
