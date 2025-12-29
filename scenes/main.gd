@@ -286,7 +286,8 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 
 
 func _on_export_properties_box_number_changed(_key: StringName, _new_value: bool) -> void:
-	update_displayed_image_size()
+	update_displayed_image_size() # for changes to min_X, max_X, min_Z, max_Z
+	update_displayed_bounds() # for changes to spawnpoint_coords
 
 
 func _on_export_button_pressed() -> void:
