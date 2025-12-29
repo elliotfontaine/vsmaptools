@@ -1,9 +1,35 @@
 extends Control
 
+enum EXPORT_TYPE {PNG, JPEG}
+enum BoxProperty {
+	MIN_X,
+	MAX_X,
+	MIN_Z,
+	MAX_Z,
+	USE_RELATIVE,
+	WHOLE_MAP,
+	WORLD_SIZE_X,
+	WORLD_SIZE_Z,
+	
+	SPAWNPOINT, # to be dropped in favor of WORLD_SIZE_X / WORLD_SIZE_Z
+}
+
 const VERBOSITY: SQLite.VerbosityLevel = SQLite.NORMAL
 const BoundSquareView := preload("res://scenes/bounds_square_view.gd")
-
-enum EXPORT_TYPE {PNG, JPEG}
+const MAX_IMAGE_SIZE := int(16E3)
+const JPEG_QUALITY := 0.75
+const PROP_STRINGNAMES: Dictionary[BoxProperty, StringName]= {
+	BoxProperty.MIN_X: &"Min X",
+	BoxProperty.MAX_X: &"Max X",
+	BoxProperty.MIN_Z: &"Min Z",
+	BoxProperty.MAX_Z: &"Max Z",
+	BoxProperty.USE_RELATIVE: &"Use Relative Coordinates",
+	BoxProperty.WHOLE_MAP: &"Whole Map",
+	BoxProperty.WORLD_SIZE_X: &"World Size (X)",
+	BoxProperty.WORLD_SIZE_Z: &"World Size (Z)",
+	
+	BoxProperty.SPAWNPOINT : &"Spawnpoint Absolute Coordinates",
+}
 
 var db: SQLite = null
 var map: Map
@@ -11,26 +37,26 @@ var export_type := EXPORT_TYPE.PNG
 var VINTAGESTORYDATA_PATH: String = OS.get_data_dir().path_join("VintagestoryData")
 
 var min_X: int:
-	set(value): export_properties_box.set_value(&"Min X", value)
-	get: return export_properties_box.get_value(&"Min X")
+	set(value): _set_box_property(BoxProperty.MIN_X, value)
+	get: return _get_box_property(BoxProperty.MIN_X)
 var max_X: int:
-	set(value): export_properties_box.set_value(&"Max X", value)
-	get: return export_properties_box.get_value(&"Max X")
+	set(value): _set_box_property(BoxProperty.MAX_X, value)
+	get: return _get_box_property(BoxProperty.MAX_X)
 var min_Z: int:
-	set(value): export_properties_box.set_value(&"Min Z", value)
-	get: return export_properties_box.get_value(&"Min Z")
+	set(value): _set_box_property(BoxProperty.MIN_Z, value)
+	get: return _get_box_property(BoxProperty.MIN_Z)
 var max_Z: int:
-	set(value): export_properties_box.set_value(&"Max Z", value)
-	get: return export_properties_box.get_value(&"Max Z")
+	set(value): _set_box_property(BoxProperty.MAX_Z, value)
+	get: return _get_box_property(BoxProperty.MAX_Z)
 var use_relative_coords: bool:
-	set(value): export_properties_box.set_value(&"Use Relative Coordinates", value)
-	get: return export_properties_box.get_value(&"Use Relative Coordinates")
+	set(value): _set_box_property(BoxProperty.USE_RELATIVE, value)
+	get: return _get_box_property(BoxProperty.USE_RELATIVE)
 var spawnpoint_coords: int:
-	set(value): export_properties_box.set_value(&"Spawnpoint Absolute Coordinates", value)
-	get: return export_properties_box.get_value(&"Spawnpoint Absolute Coordinates")
+	set(value): _set_box_property(BoxProperty.SPAWNPOINT, value)
+	get: return _get_box_property(BoxProperty.SPAWNPOINT)
 var whole_map: bool:
-	set(value): export_properties_box.set_value(&"Whole Map", value)
-	get: return export_properties_box.get_value(&"Whole Map")
+	set(value): _set_box_property(BoxProperty.WHOLE_MAP, value)
+	get: return _get_box_property(BoxProperty.WHOLE_MAP)
 
 var _export_progress: int = 0:
 	set(value):
@@ -95,18 +121,16 @@ func get_filename_from_path(path: String) -> String:
 func update_displayed_bounds() -> void:
 	if not map:
 		return
-	var absolute_pos := export_properties_box.get_int(&"Spawnpoint Absolute Coordinates")
-	var is_relative := export_properties_box.get_bool(&"Use Relative Coordinates")
 	bounds_square_view.set_bounds_from_vect(
-		map.top_left_chunk * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative),
-		map.bottom_right_chunk * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative),
+		map.top_left_block - Vector2i.ONE * spawnpoint_coords * int(use_relative_coords),
+		map.bottom_right_block - Vector2i.ONE * spawnpoint_coords * int(use_relative_coords),
 	)
 
 
 func update_displayed_image_size() -> void:
 	var x := max_X - min_X
 	var z := max_Z - min_Z
-	if z > 16E3 or x > 16E3:
+	if z > MAX_IMAGE_SIZE or x > MAX_IMAGE_SIZE:
 		image_size_label.text = str(x) + " x " + str(z) + " (too large)"
 		image_size_label.add_theme_color_override("font_color", Color.ORANGE_RED)
 	else:
@@ -195,33 +219,48 @@ func _on_timer_timeout() -> void:
 
 
 func _fill_export_properties_box() -> void:
-	export_properties_box.add_bool(&"Whole Map", false)
+	export_properties_box.add_bool(PROP_STRINGNAMES[BoxProperty.WHOLE_MAP], false)
 	export_properties_box.add_group("Bounds (in blocks)")
-	export_properties_box.add_int(&"Min X")
-	export_properties_box.add_int(&"Max X")
-	export_properties_box.add_int(&"Min Z")
-	export_properties_box.add_int(&"Max Z")
+	export_properties_box.add_int(PROP_STRINGNAMES[BoxProperty.MIN_X])
+	export_properties_box.add_int(PROP_STRINGNAMES[BoxProperty.MAX_X])
+	export_properties_box.add_int(PROP_STRINGNAMES[BoxProperty.MIN_Z])
+	export_properties_box.add_int(PROP_STRINGNAMES[BoxProperty.MAX_Z])
 	export_properties_box.end_group()
 	export_properties_box.add_group("Advanced Options", true)
-	export_properties_box.add_bool(&"Use Relative Coordinates", true)
-	export_properties_box.add_int(&"Spawnpoint Absolute Coordinates")
-	export_properties_box.set_value(&"Spawnpoint Absolute Coordinates", 512000)
+	export_properties_box.add_bool(PROP_STRINGNAMES[BoxProperty.USE_RELATIVE], true)
+	export_properties_box.add_int(PROP_STRINGNAMES[BoxProperty.SPAWNPOINT])
+	_set_box_property(BoxProperty.SPAWNPOINT, 512000)
 
 
 func _set_selection_to_bounds() -> void:
-	var absolute_pos := export_properties_box.get_int(&"Spawnpoint Absolute Coordinates")
-	var is_relative := export_properties_box.get_bool(&"Use Relative Coordinates")
-	var tl := map.top_left_chunk * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
-	var br := (map.bottom_right_chunk + Vector2i.ONE) * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
+	var tl := map.top_left_block - Vector2i.ONE * spawnpoint_coords * int(use_relative_coords)
+	var br := map.bottom_right_block - Vector2i.ONE * spawnpoint_coords * int(use_relative_coords)
 	min_X = tl.x
 	max_X = br.x
 	min_Z = tl.y
 	max_Z = br.y
 
 
+func _set_box_property(property: BoxProperty, value: Variant) -> void:
+	var prop_name: StringName = PROP_STRINGNAMES.get(property, &"")
+	if prop_name != &"":
+		export_properties_box.set_value(prop_name, value)
+	else:
+		push_error("This property was never registered to the box.")
+
+
+func _get_box_property(property: BoxProperty) -> Variant:
+	var prop_name: StringName = PROP_STRINGNAMES.get(property, &"")
+	if prop_name:
+		return export_properties_box.get_value(prop_name)
+	else:
+		push_error("This property was never registered to the box.")
+		return null
+
+
 func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> void:
-	if key == &"Use Relative Coordinates":
-		var diff := export_properties_box.get_int(&"Spawnpoint Absolute Coordinates")
+	if key == PROP_STRINGNAMES[BoxProperty.USE_RELATIVE]:
+		var diff := spawnpoint_coords
 		var diff_sign := -1 if is_true else 1
 		min_X += diff * diff_sign
 		max_X += diff * diff_sign
@@ -229,21 +268,21 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 		max_Z += diff * diff_sign
 		update_displayed_bounds()
 	
-	if key == &"Whole Map":
+	if key == PROP_STRINGNAMES[BoxProperty.WHOLE_MAP]:
 		if is_true:
-			export_properties_box.toggle_editor(&"Min X", false)
-			export_properties_box.toggle_editor(&"Max X", false)
-			export_properties_box.toggle_editor(&"Min Z", false)
-			export_properties_box.toggle_editor(&"Max Z", false)
+			export_properties_box.toggle_editor(PROP_STRINGNAMES[BoxProperty.MIN_X], false)
+			export_properties_box.toggle_editor(PROP_STRINGNAMES[BoxProperty.MAX_X], false)
+			export_properties_box.toggle_editor(PROP_STRINGNAMES[BoxProperty.MIN_Z], false)
+			export_properties_box.toggle_editor(PROP_STRINGNAMES[BoxProperty.MAX_Z], false)
 			if not map:
 				Logger.warn("No map loaded. Please load a map first.")
 				return
 			_set_selection_to_bounds()
 		else:
-			export_properties_box.toggle_editor(&"Min X", true)
-			export_properties_box.toggle_editor(&"Max X", true)
-			export_properties_box.toggle_editor(&"Min Z", true)
-			export_properties_box.toggle_editor(&"Max Z", true)
+			export_properties_box.toggle_editor(PROP_STRINGNAMES[BoxProperty.MIN_X], true)
+			export_properties_box.toggle_editor(PROP_STRINGNAMES[BoxProperty.MAX_X], true)
+			export_properties_box.toggle_editor(PROP_STRINGNAMES[BoxProperty.MIN_Z], true)
+			export_properties_box.toggle_editor(PROP_STRINGNAMES[BoxProperty.MAX_Z], true)
 
 
 func _on_export_properties_box_number_changed(_key: StringName, _new_value: bool) -> void:
@@ -277,8 +316,8 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 	var topleft: Vector2i
 	var bottomright: Vector2i
 	if whole_map:
-		topleft = map.top_left_chunk * Map.CHUNK_SIZE
-		bottomright = (map.bottom_right_chunk + Vector2i.ONE) * Map.CHUNK_SIZE
+		topleft = map.top_left_block
+		bottomright = map.bottom_right_block
 		Logger.info("Exporting whole map. Bounds: {0}, {1}".format([topleft, bottomright]))
 	else:
 		if use_relative_coords:
@@ -307,7 +346,7 @@ func _on_export_image_ready() -> void:
 			EXPORT_TYPE.PNG:
 				img.save_png(_target_path)
 			EXPORT_TYPE.JPEG:
-				img.save_jpg(_target_path, 0.75)
+				img.save_jpg(_target_path, JPEG_QUALITY)
 			_:
 				img.save_png(_target_path)
 	else:
@@ -320,7 +359,7 @@ func _on_file_label_gui_input(event: InputEvent) -> void:
 
 
 func _export_options_are_valid() -> bool:
-	if (max_X - min_X) > 16E3 or (max_Z - min_Z) > 16E3:
+	if (max_X - min_X) > MAX_IMAGE_SIZE or (max_Z - min_Z) > MAX_IMAGE_SIZE:
 		Logger.error(
 			"Images larger than 16k×16k are not supported due to internal limitations. " +
 			"Please disable 'Whole Map' and use manual bounds to export the map in multiple parts.",

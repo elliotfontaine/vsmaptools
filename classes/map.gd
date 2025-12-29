@@ -42,7 +42,7 @@ var top_left_block: Vector2i:
 var bottom_right_block: Vector2i:
 	get:
 		var unset := bottom_right_chunk == Vector2i.MIN
-		return Vector2i.MIN if unset else bottom_right_chunk * CHUNK_SIZE + Vector2i(31, 31)
+		return Vector2i.MIN if unset else (bottom_right_chunk + Vector2i.ONE) * Map.CHUNK_SIZE
 
 
 func _init(db: SQLite) -> void:
