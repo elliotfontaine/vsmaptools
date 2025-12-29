@@ -45,8 +45,18 @@ func draw_silhouette_preview(relative_chunk_positions: Array[Vector2i]) -> void:
 
 
 func center_view() -> void:
-	var center := tilemap.get_used_rect().get_center() * Map.CHUNK_SIZE
-	cam.global_position = center
+	var cam_target: Vector2i
+	var explored_rect_center_chunk := tilemap.get_used_rect().get_center()
+	if tilemap.get_cell_source_id(Vector2i.ZERO) != -1:
+		cam_target = Vector2i.ZERO
+	elif tilemap.get_cell_source_id(explored_rect_center_chunk) != -1:
+		cam_target = explored_rect_center_chunk * Map.CHUNK_SIZE
+		Logger.warn(
+			"No explored chunk at (0,0). Centering view on the center of the explored map area instead."
+		)
+	else:
+		cam_target = Vector2i.ZERO
+	cam.global_position = cam_target
 
 
 func _process_block_line_edit_change() -> void:
