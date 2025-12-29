@@ -8,6 +8,7 @@ enum EXPORT_TYPE {PNG, JPEG}
 var db: SQLite = null
 var map: Map
 var export_type := EXPORT_TYPE.PNG
+var VINTAGESTORYDATA_PATH: String = OS.get_data_dir().path_join("VintagestoryData")
 
 var min_X: int:
 	set(value): export_properties_box.set_value(&"Min X", value)
@@ -97,8 +98,8 @@ func update_displayed_bounds() -> void:
 	var absolute_pos := export_properties_box.get_int(&"Spawnpoint Absolute Coordinates")
 	var is_relative := export_properties_box.get_bool(&"Use Relative Coordinates")
 	bounds_square_view.set_bounds_from_vect(
-		map.top_left_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative),
-		map.bottom_right_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative),
+		map.top_left_chunk * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative),
+		map.bottom_right_chunk * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative),
 	)
 
 
@@ -115,7 +116,7 @@ func update_displayed_image_size() -> void:
 
 func _on_import_button_pressed() -> void:
 	Logger.debug("Import button pressed.")
-	import_file_dialog.current_dir = OS.get_data_dir().path_join("VintagestoryData").path_join("Maps")
+	import_file_dialog.current_dir = VINTAGESTORYDATA_PATH.path_join("Maps")
 	import_file_dialog.popup()
 
 
@@ -210,8 +211,8 @@ func _fill_export_properties_box() -> void:
 func _set_selection_to_bounds() -> void:
 	var absolute_pos := export_properties_box.get_int(&"Spawnpoint Absolute Coordinates")
 	var is_relative := export_properties_box.get_bool(&"Use Relative Coordinates")
-	var tl := map.top_left_bound * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
-	var br := (map.bottom_right_bound + Vector2i.ONE) * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
+	var tl := map.top_left_chunk * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
+	var br := (map.bottom_right_chunk + Vector2i.ONE) * Map.CHUNK_SIZE - Vector2i.ONE * absolute_pos * int(is_relative)
 	min_X = tl.x
 	max_X = br.x
 	min_Z = tl.y
@@ -276,8 +277,8 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 	var topleft: Vector2i
 	var bottomright: Vector2i
 	if whole_map:
-		topleft = map.top_left_bound * Map.CHUNK_SIZE
-		bottomright = (map.bottom_right_bound + Vector2i.ONE) * Map.CHUNK_SIZE
+		topleft = map.top_left_chunk * Map.CHUNK_SIZE
+		bottomright = (map.bottom_right_chunk + Vector2i.ONE) * Map.CHUNK_SIZE
 		Logger.info("Exporting whole map. Bounds: {0}, {1}".format([topleft, bottomright]))
 	else:
 		if use_relative_coords:
@@ -321,7 +322,8 @@ func _on_file_label_gui_input(event: InputEvent) -> void:
 func _export_options_are_valid() -> bool:
 	if (max_X - min_X) > 16E3 or (max_Z - min_Z) > 16E3:
 		Logger.error(
-			"Images larger than 16k×16k are not supported due to internal limitations.",
+			"Images larger than 16k×16k are not supported due to internal limitations. " +
+			"Please disable 'Whole Map' and use manual bounds to export the map in multiple parts.",
 			&"main",
 			ERR_INVALID_DATA,
 		)

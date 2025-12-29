@@ -10,6 +10,14 @@ const CHUNK_SIZE: int = MapPiece.CHUNK_SIZE
 const STEP_SIZE_PERCENT := 0.02
 const N_BATCHES := 100
 
+@warning_ignore_start("narrowing_conversion")
+const DEFAULT_WORLD_SIZE: int = 1024E3
+const WORLD_SIZE_PRESETS: Array[int] = [
+	32, 64, 128, 256, 384, 512, 1024, 5120, 10240, 25600, 51200,
+	102400, 128E3, 256E3, 384E3, 512E3, 600E3, 1024E3, 2048E3, 4096E3, 8192E3
+]
+@warning_ignore_restore("narrowing_conversion")
+
 var _load_thread: Thread
 var _db: SQLite = null
 var _map_pieces: Dictionary[Vector2i, MapPiece] = {}
@@ -22,8 +30,19 @@ var _topleft: Vector2i
 var _export: Image
 
 var chunks_count: int = 0
-var top_left_bound: Vector2i = Vector2i.MAX
-var bottom_right_bound: Vector2i = Vector2i.MIN
+var world_size: Vector2i = Vector2i.ZERO
+var top_left_chunk: Vector2i = Vector2i.MAX
+var bottom_right_chunk: Vector2i = Vector2i.MIN
+
+var top_left_block: Vector2i:
+	get:
+		var unset := top_left_chunk == Vector2i.MAX
+		return Vector2i.MAX if unset else top_left_chunk * CHUNK_SIZE
+		
+var bottom_right_block: Vector2i:
+	get:
+		var unset := bottom_right_chunk == Vector2i.MIN
+		return Vector2i.MIN if unset else bottom_right_chunk * CHUNK_SIZE + Vector2i(31, 31)
 
 
 func _init(db: SQLite) -> void:
@@ -43,6 +62,11 @@ func _process(_delta: float) -> void:
 		if percent != _export_progress:
 			_export_progress = percent
 			export_progressed.emit(percent)
+
+
+func _exit_tree() -> void:
+	if _load_thread.is_started():
+		_load_thread.wait_to_finish()
 
 
 func load_pieces() -> void:
@@ -114,10 +138,14 @@ func get_export_image() -> Image:
 
 
 func get_map_density() -> float:
-	if top_left_bound == Vector2i.MAX or bottom_right_bound == Vector2i.MIN:
+	if top_left_chunk == Vector2i.MAX or bottom_right_chunk == Vector2i.MIN:
 		return 0.0
-	var size := (bottom_right_bound.x - top_left_bound.x + 1) * (bottom_right_bound.y - top_left_bound.y + 1)
+	var size := (bottom_right_chunk.x - top_left_chunk.x + 1) * (bottom_right_chunk.y - top_left_chunk.y + 1)
 	return float(chunks_count) / float(size)
+
+
+func get_explored_region_center() -> Vector2i:
+	return (top_left_block + bottom_right_block) / 2
 
 
 func _load_pieces_threaded() -> void:
@@ -137,18 +165,20 @@ func _load_pieces_threaded() -> void:
 		loading_step.emit.call_deferred(STEP_SIZE_PERCENT * step)
 		#await get_tree().process_frame
 	_db.close_db()
+	
+	world_size = _guess_world_size()
 	loading_completed.emit.call_deferred()
 
 
 func _update_bounds(mappiece_pos: Vector2i) -> void:
-	if mappiece_pos.x < top_left_bound.x:
-		top_left_bound.x = mappiece_pos.x
-	if mappiece_pos.y < top_left_bound.y:
-		top_left_bound.y = mappiece_pos.y
-	if mappiece_pos.x > bottom_right_bound.x:
-		bottom_right_bound.x = mappiece_pos.x
-	if mappiece_pos.y > bottom_right_bound.y:
-		bottom_right_bound.y = mappiece_pos.y
+	if mappiece_pos.x < top_left_chunk.x:
+		top_left_chunk.x = mappiece_pos.x
+	if mappiece_pos.y < top_left_chunk.y:
+		top_left_chunk.y = mappiece_pos.y
+	if mappiece_pos.x > bottom_right_chunk.x:
+		bottom_right_chunk.x = mappiece_pos.x
+	if mappiece_pos.y > bottom_right_chunk.y:
+		bottom_right_chunk.y = mappiece_pos.y
 
 
 func _set_chunks_count() -> void:
@@ -158,6 +188,39 @@ func _set_chunks_count() -> void:
 	_db.close_db()
 
 
-func _exit_tree() -> void:
-	if _load_thread.is_started():
-		_load_thread.wait_to_finish()
+func _guess_world_size() -> Vector2i:
+	const fallback_value := Vector2i(DEFAULT_WORLD_SIZE, DEFAULT_WORLD_SIZE)
+
+	if top_left_chunk == Vector2i.MAX or bottom_right_chunk == Vector2i.MIN:
+		return fallback_value
+
+	var possible_x_sizes: Array[int] = []
+	var possible_z_sizes: Array[int] = []
+	for size in WORLD_SIZE_PRESETS:
+		var s := int(size)
+		if s >= bottom_right_block.x:
+			possible_x_sizes.append(s)
+		if s >= bottom_right_block.y:
+			possible_z_sizes.append(s)
+
+	var explored_center := get_explored_region_center()
+
+	# Choose the preset whose center is the closest to the explored region center
+	var pick_best_size := func(possible_sizes: Array[int], explored_axis_center: int) -> int:
+		if possible_sizes.is_empty():
+			return DEFAULT_WORLD_SIZE
+		var best_fit_size := possible_sizes[0]
+		@warning_ignore("integer_division")
+		var best_fit_dist := absi(best_fit_size / 2 - explored_axis_center)
+		for s in possible_sizes:
+			@warning_ignore("integer_division")
+			var dist := absi(s / 2 - explored_axis_center)
+			if dist < best_fit_dist:
+				best_fit_dist = dist
+				best_fit_size = s
+		return best_fit_size
+
+	var best_x: int = pick_best_size.call(possible_x_sizes, explored_center.x)
+	var best_z: int = pick_best_size.call(possible_z_sizes, explored_center.y)
+
+	return Vector2i(best_x, best_z)
