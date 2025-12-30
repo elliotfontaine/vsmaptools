@@ -19,9 +19,11 @@ var _last_hovered_block := Vector2i(-9999, -9999)
 
 
 func _input(event: InputEvent) -> void:
-	var mouse_pos := get_viewport().get_mouse_position()
-	var is_over_textedits := info_box_v_box_container.get_global_rect().has_point(mouse_pos)
-	if event is not InputEventMouseMotion or is_over_textedits:
+	if (
+			event is not InputEventMouseMotion
+			or block_pos_line_edit.has_focus()
+			or chunk_pos_line_edit.has_focus()
+	):
 		return
 	
 	var block_pos: Vector2i = Vector2i(cam.get_global_mouse_position())
@@ -132,16 +134,20 @@ func _on_pan_zoom_camera_zoom_changed(value: float) -> void:
 
 
 func _on_block_pos_line_edit_text_submitted(_new_text: String) -> void:
-	_process_block_line_edit_change()
+	block_pos_line_edit.release_focus()
 
 
 func _on_block_pos_line_edit_focus_exited() -> void:
+	Logger.debug("block_pos_line_edit_focus_exited")
 	_process_block_line_edit_change()
+	self.grab_focus()
 
 
 func _on_chunk_pos_line_edit_text_submitted(_new_text: String) -> void:
-	_process_chunk_line_edit_change()
+	chunk_pos_line_edit.release_focus()
 
 
 func _on_chunk_pos_line_edit_focus_exited() -> void:
+	Logger.debug("chunk_pos_line_edit_focus_exited")
 	_process_chunk_line_edit_change()
+	self.grab_focus()
