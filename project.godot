@@ -36,6 +36,7 @@ gdscript/warnings/unsafe_method_access=1
 
 window/size/viewport_width=1440
 window/size/viewport_height=960
+window/energy_saving/keep_screen_on=false
 
 [editor]
 
