@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://dsog6tys60ik"]
+[gd_scene load_steps=12 format=3 uid="uid://dsog6tys60ik"]
 
 [ext_resource type="Script" uid="uid://m0ghr5qlq7h" path="res://scenes/main.gd" id="1_0xm2m"]
 [ext_resource type="Texture2D" uid="uid://ch8ryyqxqmnx6" path="res://assets/icons/load.svg" id="1_ig7tw"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://bjduwlxxduy7l" path="res://scenes/bounds_square_view.tscn" id="3_1bvp3"]
 [ext_resource type="Script" uid="uid://biad503x385qg" path="res://addons/tnowe_extra_controls/elements/properties_box.gd" id="3_h2yge"]
 [ext_resource type="FontVariation" uid="uid://c5riwjed41xg" path="res://resources/embolden_inter.tres" id="3_tipki"]
+[ext_resource type="Texture2D" uid="uid://cbky85y2gcdvm" path="res://assets/icons/ArrowRight.svg" id="5_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://fv7lq3fnvbrb" path="res://scenes/map_preview.tscn" id="6_o6xl0"]
 [ext_resource type="FontFile" uid="uid://bctanex34iiej" path="res://assets/fonts/AtkynsonMonoNerdFontMono-Regular.otf" id="7_o6xl0"]
 [ext_resource type="Texture2D" uid="uid://cpau0ro2in8x6" path="res://assets/icons/mouse_left.svg" id="8_choun"]
@@ -93,7 +94,7 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile"]
 layout_mode = 2
-text = "Map File"
+text = "File"
 
 [node name="MarginContainer2" type="MarginContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile"]
 layout_mode = 2
@@ -102,26 +103,45 @@ theme_override_constants/margin_top = 15
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 15
 
-[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile"]
+[node name="ImportOptionButton" type="OptionButton" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_horizontal = 3
+alignment = 1
+text_overrun_behavior = 3
+selected = 0
+fit_to_longest_item = false
+item_count = 1
+popup/item_0/text = "Select World"
+popup/item_0/id = 0
+popup/item_0/separator = true
 
-[node name="FileLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile/PanelContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 2
-mouse_filter = 0
-text = "<empty>"
-horizontal_alignment = 1
-clip_text = true
-
-[node name="ImportButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile"]
+[node name="FileExplorerButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
 icon = ExtResource("1_ig7tw")
 icon_alignment = 1
 expand_icon = true
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import"]
+layout_mode = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="LoadMapButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/h_separation = 8
+theme_override_constants/icon_max_width = 20
+disabled = true
+text = "Load Map"
+icon = ExtResource("5_ya4ey")
+icon_alignment = 2
 
 [node name="MapInfo" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -392,8 +412,10 @@ wait_time = 0.5
 autostart = true
 ignore_time_scale = true
 
-[connection signal="gui_input" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile/PanelContainer/FileLabel" to="." method="_on_file_label_gui_input"]
-[connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile/ImportButton" to="." method="_on_import_button_pressed"]
+[connection signal="item_selected" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile/ImportOptionButton" to="." method="_on_import_option_button_item_selected"]
+[connection signal="toggled" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile/ImportOptionButton" to="." method="_on_import_option_button_toggled"]
+[connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/MapFile/FileExplorerButton" to="." method="_on_file_explorer_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Import/LoadMapButton" to="." method="_on_load_map_button_pressed"]
 [connection signal="bool_changed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Selection/ExportPropertiesBox" to="." method="_on_export_properties_box_bool_changed"]
 [connection signal="number_changed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Selection/ExportPropertiesBox" to="." method="_on_export_properties_box_number_changed"]
 [connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export/ExportButton" to="." method="_on_export_button_pressed"]

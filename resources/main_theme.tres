@@ -1,4 +1,6 @@
-[gd_resource type="Theme" load_steps=6 format=3 uid="uid://bgpo601renruf"]
+[gd_resource type="Theme" load_steps=7 format=3 uid="uid://bgpo601renruf"]
+
+[ext_resource type="StyleBox" uid="uid://domnpx7271ex5" path="res://resources/option_button_panel.tres" id="1_ols5k"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gsqoc"]
 content_margin_left = 6.0
@@ -75,6 +77,7 @@ MarginContainer/constants/margin_bottom = 20
 MarginContainer/constants/margin_left = 20
 MarginContainer/constants/margin_right = 20
 MarginContainer/constants/margin_top = 20
+PopupMenu/styles/panel = ExtResource("1_ols5k")
 ProgressBar/styles/fill = SubResource("StyleBoxFlat_0omi4")
 ShadowTextLabel/base_type = &"Label"
 ShadowTextLabel/colors/font_color = Color(1, 1, 1, 1)
