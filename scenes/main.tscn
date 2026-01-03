@@ -39,6 +39,7 @@ layout_mode = 2
 [node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer/VSplitContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+split_offset = 300
 
 [node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VSplitContainer/HSplitContainer"]
 layout_mode = 2
@@ -211,20 +212,26 @@ layout_mode = 2
 size_flags_horizontal = 10
 text = "?"
 
-[node name="BoundsSquare" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo"]
+[node name="BoundsSquare" type="VBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo"]
 layout_mode = 2
 
 [node name="BoundsTitle" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Map Bounds
-(in blocks)  "
+text = "Map Bounds (in blocks)  "
 
 [node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare"]
 layout_mode = 2
-size_flags_horizontal = 10
+size_flags_horizontal = 0
 
-[node name="BoundsSquareView" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare/PanelContainer" instance=ExtResource("3_1bvp3")]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="BoundsSquareView" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/MapInfo/LoadedMapInfo/BoundsSquare/PanelContainer/MarginContainer" instance=ExtResource("3_1bvp3")]
 unique_name_in_owner = true
 layout_mode = 2
 
