@@ -1,17 +1,19 @@
-class_name Utils extends RefCounted
+class_name Utils
+extends RefCounted
 
 
 static func split_array_evenly(array: Array, n: int) -> Array[Array]:
 	if n <= 0:
 		push_error("split_array_evenly: n must be > 0")
 		return [[]]
-	
+
 	var result: Array[Array] = []
 	var total := array.size()
 	if total == 0:
-		for i in range(n): result.append([])
+		for i in range(n):
+			result.append([])
 		return result
-	
+
 	@warning_ignore("integer_division")
 	var base_size: int = total / n
 	var remainder := total % n
@@ -21,5 +23,5 @@ static func split_array_evenly(array: Array, n: int) -> Array[Array]:
 		var sub := array.slice(index, index + sub_size)
 		result.append(sub)
 		index += sub_size
-	
+
 	return result

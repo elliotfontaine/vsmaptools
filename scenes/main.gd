@@ -1,7 +1,7 @@
 extends Control
 
-enum ImportType {WORLDSAVE, MAP, EXTERNAL_MAP}
-enum EXPORT_TYPE {PNG, JPEG}
+enum ImportType { WORLDSAVE, MAP, EXTERNAL_MAP }
+enum ExportType { PNG, JPEG }
 enum BoxProperty {
 	MIN_X,
 	MAX_X,
@@ -30,48 +30,57 @@ const PROP_STRINGNAMES: Dictionary[BoxProperty, StringName] = {
 
 var db: SQLite = null
 var map: Map
-var export_type := EXPORT_TYPE.PNG
+var export_type := ExportType.PNG
 var VINTAGESTORYDATA_PATH: String = OS.get_data_dir().path_join("VintagestoryData")
-
 var min_X: int:
-	set(value): _set_box_property(BoxProperty.MIN_X, value)
-	get: return _get_box_property(BoxProperty.MIN_X)
+	set(value):
+		_set_box_property(BoxProperty.MIN_X, value)
+	get:
+		return _get_box_property(BoxProperty.MIN_X)
 var max_X: int:
-	set(value): _set_box_property(BoxProperty.MAX_X, value)
-	get: return _get_box_property(BoxProperty.MAX_X)
+	set(value):
+		_set_box_property(BoxProperty.MAX_X, value)
+	get:
+		return _get_box_property(BoxProperty.MAX_X)
 var min_Z: int:
-	set(value): _set_box_property(BoxProperty.MIN_Z, value)
-	get: return _get_box_property(BoxProperty.MIN_Z)
+	set(value):
+		_set_box_property(BoxProperty.MIN_Z, value)
+	get:
+		return _get_box_property(BoxProperty.MIN_Z)
 var max_Z: int:
-	set(value): _set_box_property(BoxProperty.MAX_Z, value)
-	get: return _get_box_property(BoxProperty.MAX_Z)
+	set(value):
+		_set_box_property(BoxProperty.MAX_Z, value)
+	get:
+		return _get_box_property(BoxProperty.MAX_Z)
 var use_relative_coords: bool:
-	set(value): _set_box_property(BoxProperty.USE_RELATIVE, value)
-	get: return _get_box_property(BoxProperty.USE_RELATIVE)
+	set(value):
+		_set_box_property(BoxProperty.USE_RELATIVE, value)
+	get:
+		return _get_box_property(BoxProperty.USE_RELATIVE)
 var whole_map: bool:
-	set(value): _set_box_property(BoxProperty.WHOLE_MAP, value)
-	get: return _get_box_property(BoxProperty.WHOLE_MAP)
+	set(value):
+		_set_box_property(BoxProperty.WHOLE_MAP, value)
+	get:
+		return _get_box_property(BoxProperty.WHOLE_MAP)
 var world_size: Vector2i:
 	set(value):
 		_set_box_property(BoxProperty.WORLD_SIZE_X, value.x)
 		_set_box_property(BoxProperty.WORLD_SIZE_Z, value.y)
-	get: return Vector2i(
-		_get_box_property(BoxProperty.WORLD_SIZE_X),
-		_get_box_property(BoxProperty.WORLD_SIZE_Z)
-	)
+	get:
+		return Vector2i(
+			_get_box_property(BoxProperty.WORLD_SIZE_X),
+			_get_box_property(BoxProperty.WORLD_SIZE_Z),
+		)
 var spawnpoint_abs: Vector2i:
-	get: return world_size / 2
-
+	get:
+		return world_size / 2
 var _export_progress: int = 0:
 	set(value):
 		_export_progress = value
 		export_progress_bar.value = value
-
 var _target_path: String
-
-# Array of items metadata for the ImportOptionButton.
-# Each dict is structured as follow: {type": ImportType, "path": String}
-var _recently_opened: Dictionary[String, ImportType]
+# Array of external files metadata for the ImportOptionButton.
+var _recently_opened: Dictionary[String, ImportType] # strings are paths
 var _selected_file: Dictionary # {type": ImportType, "path": String}
 var _last_file_dialog_path: String = VINTAGESTORYDATA_PATH.path_join("Maps")
 
@@ -107,18 +116,28 @@ func _ready() -> void:
 	export_button.disabled = true
 
 	var main_module := Logger.get_module(&"main")
-	var sink := RichTextLabelSink.new("rich_text_label", logs_rtl, Logger.ExternalSink.QUEUE_MODES.ALL)
+	var sink := RichTextLabelSink.new(
+		"rich_text_label",
+		logs_rtl,
+		Logger.ExternalSink.QUEUE_MODES.ALL,
+	)
 	main_module.output_level = Logger.DEBUG if OS.is_debug_build() else Logger.INFO
 	main_module.set_external_sink(sink)
 	main_module.set_common_output_strategy(Logger.STRATEGY_PRINT_AND_EXTERNAL_SINK)
 	map_preview.selection_tool.selected.connect(_on_selection_tool_selected)
-	
+
 	var project_version: String = ProjectSettings.get_setting("application/config/version")
 	version_tag.text = "v%s" % project_version
 	Logger.info("Vintage Story Map Tools — v%s" % project_version)
-	Logger.info("Godot version: %s" % Engine.get_version_info()["string"] + "— https://godotengine.org")
+	Logger.info(
+		"Godot version: %s" % Engine.get_version_info()["string"] + "— https://godotengine.org",
+	)
 	Logger.info("Renderer: %s" % RenderingServer.get_video_adapter_name())
-	Logger.debug("Screen scale factor: %s" % DisplayServer.screen_get_scale(DisplayServer.SCREEN_OF_MAIN_WINDOW))
+	Logger.debug(
+		"Screen scale factor: %s" % DisplayServer.screen_get_scale(
+			DisplayServer.SCREEN_OF_MAIN_WINDOW,
+		),
+	)
 
 
 func update_displayed_bounds() -> void:
@@ -139,43 +158,6 @@ func update_displayed_image_size() -> void:
 	else:
 		image_size_label.text = str(x) + " x " + str(z)
 		image_size_label.remove_theme_color_override("font_color")
-
-
-func _on_map_loading_step(step: float) -> void:
-	map_loading_bar.value = step * 100
-
-
-func _on_map_loading_completed() -> void:
-	Logger.info("Map loading completed.")
-	chunks_number_value.text = str(map.chunks_count)
-	map_density_value.text = str(int(map.get_map_density() * 100)) + "%"
-	update_displayed_bounds()
-	map_info_hint.hide()
-	loading_map_container.hide()
-	map_loading_bar.value = 0.0
-	loaded_map_info.show()
-
-	if whole_map:
-		_set_selection_to_bounds()
-
-	file_explorer_button.disabled = false
-	load_map_button.disabled = false
-	export_button.disabled = false
-	
-	world_size = map.world_size
-	if world_size != Map.DEFAULT_WORLD_SIZE:
-		Logger.info("World uses a custom size: %s" % world_size)
-
-	map_preview.draw_silhouette_preview(
-		map.get_pieces_relative_chunk_positions(
-			spawnpoint_abs / map.CHUNK_SIZE
-		)
-	)
-	map_preview.center_view()
-
-
-func _on_map_export_progressed(percent: int) -> void:
-	_export_progress = percent
 
 
 func _fill_export_properties_box() -> void:
@@ -200,13 +182,13 @@ func _select_file_for_import(type: ImportType, path: String) -> void:
 		import_option_button.add_item(path) # full path
 	else:
 		import_option_button.add_item(path.get_file())
-	
-	import_option_button.set_item_metadata(index, {&"type": type, &"path": path})
+
+	import_option_button.set_item_metadata(index, { &"type": type, &"path": path })
 	import_option_button.select(index)
 	load_map_button.disabled = false
-	
-	_selected_file = {&"type": type, &"path": path}
-	
+
+	_selected_file = { &"type": type, &"path": path }
+
 	if type in [ImportType.MAP, ImportType.EXTERNAL_MAP]:
 		Logger.debug("Map file selected.")
 	if type == ImportType.WORLDSAVE:
@@ -234,41 +216,44 @@ func _get_box_property(property: BoxProperty) -> Variant:
 	var prop_name: StringName = PROP_STRINGNAMES.get(property, &"")
 	if prop_name:
 		return export_properties_box.get_value(prop_name)
-	else:
-		push_error("This property was never registered to the box.")
-		return null
+
+	push_error("This property was never registered to the box.")
+	return null
 
 
 func _update_import_option_button_list() -> void:
 	var button := import_option_button
-	var meta: Dictionary = {}
+	var meta: Dictionary = { }
 	if button.selected:
 		meta = button.get_selected_metadata()
 	button.clear()
 
 	var saves_dir := VINTAGESTORYDATA_PATH.path_join("Saves")
 	var maps_dir := VINTAGESTORYDATA_PATH.path_join("Maps")
-	
+
 	if not DirAccess.dir_exists_absolute(VINTAGESTORYDATA_PATH):
-		Logger.error("Could not find the VintageStoryData directory. Select a file with the file explorer.")
+		Logger.error(
+			"Could not find the VintageStoryData directory. " +
+			"Select a file with the file explorer.",
+		)
 		return
-	
+
 	button.add_separator("Select World")
 	_add_directory_files_to_option_button(button, saves_dir, ImportType.WORLDSAVE)
 	button.add_separator("Select Map Directly")
 	_add_directory_files_to_option_button(button, maps_dir, ImportType.MAP)
-	
+
 	if not _recently_opened.is_empty():
 		button.add_separator("Select Recently Opened")
 		for recent_path in _recently_opened:
 			var index := button.item_count
 			var recent_meta := {
 				&"type": _recently_opened[recent_path],
-				&"path": recent_path
+				&"path": recent_path,
 			}
 			button.add_item(recent_path)
 			button.set_item_metadata(index, recent_meta)
-	
+
 	# reselect previous selection
 	if not meta:
 		return
@@ -279,9 +264,9 @@ func _update_import_option_button_list() -> void:
 
 
 func _add_directory_files_to_option_button(
-	button: OptionButton,
-	dir_path: String,
-	import_type: ImportType
+		button: OptionButton,
+		dir_path: String,
+		import_type: ImportType,
 ) -> void:
 	if not DirAccess.dir_exists_absolute(dir_path):
 		Logger.warn("Directory not found: %s" % dir_path)
@@ -300,10 +285,7 @@ func _add_directory_files_to_option_button(
 			var index := button.item_count
 			var full_path := dir_path.path_join(file_name)
 			button.add_item(file_name.get_basename())
-			button.set_item_metadata(index, {
-				&"type": import_type,
-				&"path": full_path
-			})
+			button.set_item_metadata(index, { &"type": import_type, &"path": full_path })
 		file_name = dir.get_next()
 
 	dir.list_dir_end()
@@ -318,26 +300,26 @@ func _export_options_are_valid() -> bool:
 			ERR_INVALID_DATA,
 		)
 		return false
-	
+
 	if whole_map:
 		Logger.debug("Export options are valid.")
 		return true
-	elif min_X == max_X and max_X == min_Z and min_Z == max_Z:
+	if min_X == max_X and max_X == min_Z and min_Z == max_Z:
 		Logger.error(
 			"Selection is empty because bounds are identical. Consider enabling `whole_map`.",
 			&"main",
 			ERR_INVALID_DATA,
 		)
 		return false
-	elif not min_X < max_X:
+	if not min_X < max_X:
 		Logger.error("Min X should be lower than Max X.", &"main", ERR_INVALID_DATA)
 		return false
-	elif not min_Z < max_Z:
+	if not min_Z < max_Z:
 		Logger.error("Min Z should be lower than Max Z.", &"main", ERR_INVALID_DATA)
 		return false
-	else:
-		Logger.debug("Export options are valid.")
-		return true
+
+	Logger.debug("Export options are valid.")
+	return true
 
 
 func _on_file_explorer_button_pressed() -> void:
@@ -359,7 +341,7 @@ func _on_file_dialog_file_selected(path: String) -> void:
 func _load_file() -> void:
 	if not _selected_file:
 		return
-	
+
 	var map_path: String
 	if _selected_file.type in [ImportType.MAP, ImportType.EXTERNAL_MAP]:
 		map_path = _selected_file.path
@@ -367,7 +349,7 @@ func _load_file() -> void:
 		Logger.error(
 			"World save is invalid: %s" % _selected_file.path,
 			&"main",
-			WorldSave.validate_db_file(_selected_file.path)
+			WorldSave.validate_db_file(_selected_file.path),
 		)
 		return
 	else:
@@ -377,14 +359,14 @@ func _load_file() -> void:
 		else:
 			Logger.error("Could not find map file associated to the selected save file.")
 			return
-	
+
 	db = SQLite.new()
 	db.path = map_path
 	db.verbosity_level = VERBOSITY
 	Logger.debug("New SQLite database access with verbosity level: %s" % VERBOSITY)
 
 	Logger.info("Loading map file at " + map_path)
-	
+
 	file_explorer_button.disabled = true
 	load_map_button.disabled = true
 	export_button.disabled = true
@@ -392,10 +374,10 @@ func _load_file() -> void:
 	if map:
 		Logger.debug("Freeing previously loaded map")
 		map.queue_free()
-	
+
 	map = Map.new(db)
 	add_child(map)
-	
+
 	if _selected_file.type == ImportType.WORLDSAVE:
 		var save := WorldSave.new(_selected_file.path)
 		map.world_size = save.get_world_size()
@@ -417,8 +399,45 @@ func _get_map_path_from_save_path(save_path: String) -> String:
 	var map_files := DirAccess.get_files_at(VINTAGESTORYDATA_PATH.path_join("Maps"))
 	if save_id + ".db" in map_files:
 		return VINTAGESTORYDATA_PATH.path_join("Maps").path_join(save_id + ".db")
-	else:
-		return ""
+
+	return ""
+
+
+func _on_map_loading_step(step: float) -> void:
+	map_loading_bar.value = step * 100
+
+
+func _on_map_loading_completed() -> void:
+	Logger.info("Map loading completed.")
+	chunks_number_value.text = str(map.chunks_count)
+	map_density_value.text = str(int(map.get_map_density() * 100)) + "%"
+	update_displayed_bounds()
+	map_info_hint.hide()
+	loading_map_container.hide()
+	map_loading_bar.value = 0.0
+	loaded_map_info.show()
+
+	if whole_map:
+		_set_selection_to_bounds()
+
+	file_explorer_button.disabled = false
+	load_map_button.disabled = false
+	export_button.disabled = false
+
+	world_size = map.world_size
+	if world_size != Map.DEFAULT_WORLD_SIZE:
+		Logger.info("World uses a custom size: %s" % world_size)
+
+	map_preview.draw_silhouette_preview(
+		map.get_pieces_relative_chunk_positions(
+			spawnpoint_abs / map.CHUNK_SIZE,
+		),
+	)
+	map_preview.center_view()
+
+
+func _on_map_export_progressed(percent: int) -> void:
+	_export_progress = percent
 
 
 func _on_timer_timeout() -> void:
@@ -440,7 +459,7 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 		min_Z += diff.y * diff_sign
 		max_Z += diff.y * diff_sign
 		update_displayed_bounds()
-	
+
 	if key == PROP_STRINGNAMES[BoxProperty.WHOLE_MAP]:
 		if is_true:
 			export_properties_box.toggle_editor(PROP_STRINGNAMES[BoxProperty.MIN_X], false)
@@ -469,11 +488,11 @@ func _on_export_button_pressed() -> void:
 	if not map:
 		Logger.error("Cannot export since there isn't a loaded map.")
 		return
-	
+
 	match export_type:
-		EXPORT_TYPE.PNG:
+		ExportType.PNG:
 			export_file_dialog.set_current_file("vintage_story_map.png")
-		EXPORT_TYPE.JPEG:
+		ExportType.JPEG:
 			export_file_dialog.set_current_file("vintage_story_map.jpg")
 		_:
 			export_file_dialog.set_current_file("vintage_story_map.png")
@@ -487,7 +506,7 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 	file_explorer_button.disabled = true
 	load_map_button.disabled = true
 	export_button.disabled = true
-	
+
 	var topleft: Vector2i
 	var bottomright: Vector2i
 	if whole_map:
@@ -502,7 +521,7 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 			topleft = Vector2i(min_X, min_Z)
 			bottomright = Vector2i(max_X, max_Z)
 		Logger.info("Exporting map subset. Bounds: {0}, {1}".format([topleft, bottomright]))
-	
+
 	Logger.info("Processing image for export...")
 	map.build_export_threaded(topleft, bottomright, whole_map)
 
@@ -510,7 +529,7 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 func _on_export_image_ready() -> void:
 	Logger.info("Image processing completed.")
 	export_progress_bar.hide()
-	
+
 	file_explorer_button.disabled = false
 	load_map_button.disabled = false
 	export_button.disabled = false
@@ -519,9 +538,9 @@ func _on_export_image_ready() -> void:
 	if img:
 		Logger.info("Saving image to file: %s" % _target_path)
 		match export_type:
-			EXPORT_TYPE.PNG:
+			ExportType.PNG:
 				img.save_png(_target_path)
-			EXPORT_TYPE.JPEG:
+			ExportType.JPEG:
 				img.save_jpg(_target_path, JPEG_QUALITY)
 			_:
 				img.save_png(_target_path)
@@ -530,7 +549,7 @@ func _on_export_image_ready() -> void:
 
 
 func _on_filetype_option_button_item_selected(index: int) -> void:
-	export_type = EXPORT_TYPE.values()[index]
+	export_type = ExportType.values()[index]
 
 
 func _on_selection_tool_selected(rect: Rect2) -> void:

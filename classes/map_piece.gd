@@ -1,4 +1,5 @@
-class_name MapPiece extends RefCounted
+class_name MapPiece
+extends RefCounted
 
 const CHUNK_SIZE: int = 32
 
@@ -6,19 +7,15 @@ var blob: PackedByteArray
 var pixel_data: PackedByteArray
 var chunk_position: Vector2i
 var block_position: Vector2i:
-	set(value): chunk_position = value / CHUNK_SIZE
-	get: return chunk_position * CHUNK_SIZE
+	set(value):
+		chunk_position = value / CHUNK_SIZE
+	get:
+		return chunk_position * CHUNK_SIZE
 
 
 func _init(position: int, data: PackedByteArray) -> void:
 	chunk_position = _chunkpos_from_int(position)
 	blob = data
-
-
-func _chunkpos_from_int(pos: int) -> Vector2i:
-	var chunk_x := pos & ((1 << 21) - 1) # bits 0–20
-	var chunk_z := (pos >> 27) & ((1 << 21) - 1) # bits 27–47
-	return Vector2i(chunk_x, chunk_z)
 
 
 func decode_blob(data: PackedByteArray) -> void:
@@ -30,12 +27,12 @@ func decode_blob(data: PackedByteArray) -> void:
 	if result_code != Proto.PB_ERR.NO_ERRORS:
 		push_error("ERROR WHILE READING PROTOBUF DATA")
 		return
-	
+
 	var pixels: Array[int] = message.get_Pixels()
 	if pixels.size() != CHUNK_SIZE * CHUNK_SIZE:
 		push_error("Unexpected pixel array size")
 		return
-	
+
 	pixel_data = PackedByteArray()
 	pixel_data.resize(pixels.size() * 4) # 4 bytes per pixel
 
@@ -54,3 +51,9 @@ func decode_blob(data: PackedByteArray) -> void:
 
 func generate_image() -> Image:
 	return Image.create_from_data(CHUNK_SIZE, CHUNK_SIZE, false, Image.FORMAT_RGBA8, pixel_data)
+
+
+func _chunkpos_from_int(pos: int) -> Vector2i:
+	var chunk_x := pos & ((1 << 21) - 1) # bits 0–20
+	var chunk_z := (pos >> 27) & ((1 << 21) - 1) # bits 27–47
+	return Vector2i(chunk_x, chunk_z)

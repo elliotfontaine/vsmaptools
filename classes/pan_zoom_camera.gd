@@ -1,4 +1,5 @@
-class_name PanZoomCamera extends Camera2D
+class_name PanZoomCamera
+extends Camera2D
 
 signal zoom_changed(value: float)
 signal position_changed(value: Vector2)
@@ -15,12 +16,6 @@ var zoom_level: float = 1:
 	set(value):
 		zoom_changed.emit(value)
 		zoom_level = value
-
-
-func _set(property: StringName, _value: Variant) -> bool:
-	if property == &"global_position":
-		position_changed.emit(global_position)
-	return false
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -46,20 +41,26 @@ func _unhandled_input(event: InputEvent) -> void:
 			set_zoom_level(zoom_level + (zoom_factor * 0.5))
 		elif magnify_gesture.factor < 1:
 			set_zoom_level(zoom_level - (zoom_factor * 0.5))
-	
+
 	if position_before_drag and event is InputEventMouseMotion:
 		var mouse_motion := event as InputEventMouseMotion
 		self.global_position = position_before_drag2 + (position_before_drag - mouse_motion.global_position) * (1 / zoom_level)
 	position_changed.emit(offset)
 
 
+func _set(property: StringName, _value: Variant) -> bool:
+	if property == &"global_position":
+		position_changed.emit(global_position)
+	return false
+
+
 func set_zoom_level(level: float, mouse_world_position := self.get_global_mouse_position()) -> void:
 	var old_zoom_level := zoom_level
-	
+
 	zoom_level = clampf(level, min_zoom, max_zoom)
-	
+
 	var direction := (mouse_world_position - self.global_position)
-	var new_position := self.global_position + direction - ((direction) / (zoom_level / old_zoom_level))
-	
+	var new_position := self.global_position + direction - direction / (zoom_level / old_zoom_level)
+
 	self.zoom = Vector2(zoom_level, zoom_level)
 	self.global_position = new_position

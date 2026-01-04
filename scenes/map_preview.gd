@@ -1,7 +1,11 @@
-class_name MapPreview extends SubViewportContainer
+class_name MapPreview
+extends SubViewportContainer
 
 signal chunk_hovered(coordinates: Vector2i)
 signal blockpos_hovered(coordinates: Vector2i)
+
+var _last_hovered_chunk := Vector2i(-9999, -9999)
+var _last_hovered_block := Vector2i(-9999, -9999)
 
 @onready var sub_vp: SubViewport = %SubViewport
 @onready var tilemap: TileMapLayer = %TileMapLayer
@@ -14,25 +18,22 @@ signal blockpos_hovered(coordinates: Vector2i)
 @onready var zoom_increase_button: Button = %ZoomIncreaseButton
 @onready var selection_tool: SelectionTool = %SelectionTool
 
-var _last_hovered_chunk := Vector2i(-9999, -9999)
-var _last_hovered_block := Vector2i(-9999, -9999)
-
 
 func _input(event: InputEvent) -> void:
 	if (
-			event is not InputEventMouseMotion
-			or block_pos_line_edit.has_focus()
-			or chunk_pos_line_edit.has_focus()
+		event is not InputEventMouseMotion
+		or block_pos_line_edit.has_focus()
+		or chunk_pos_line_edit.has_focus()
 	):
 		return
-	
+
 	var block_pos: Vector2i = Vector2i(cam.get_global_mouse_position())
 	var chunk_pos := tilemap.local_to_map(block_pos)
 	if block_pos != _last_hovered_block:
 		_last_hovered_block = block_pos
 		block_pos_line_edit.text = str(block_pos).replace("(", "").replace(")", "")
 		blockpos_hovered.emit(chunk_pos)
-	
+
 		if chunk_pos != _last_hovered_chunk:
 			_last_hovered_chunk = chunk_pos
 			chunk_pos_line_edit.text = str(chunk_pos).replace("(", "").replace(")", "")
@@ -54,7 +55,8 @@ func center_view() -> void:
 	elif tilemap.get_cell_source_id(explored_rect_center_chunk) != -1:
 		cam_target = explored_rect_center_chunk * Map.CHUNK_SIZE
 		Logger.warn(
-			"No explored chunk at (0,0). Centering view on the center of the explored map area instead."
+			"No explored chunk at (0,0). " +
+			"Centering view on the center of the explored map area instead.",
 		)
 	else:
 		cam_target = Vector2i.ZERO
@@ -63,7 +65,7 @@ func center_view() -> void:
 
 func _process_block_line_edit_change() -> void:
 	var parsed := _parse_vector2i(block_pos_line_edit.text)
-	
+
 	if not parsed.ok:
 		Logger.error(parsed.error)
 		block_pos_line_edit.text = str(_last_hovered_block).replace("(", "").replace(")", "")
@@ -76,7 +78,7 @@ func _process_block_line_edit_change() -> void:
 
 func _process_chunk_line_edit_change() -> void:
 	var parsed := _parse_vector2i(chunk_pos_line_edit.text)
-	
+
 	if not parsed.ok:
 		Logger.error(parsed.error)
 		chunk_pos_line_edit.text = str(_last_hovered_chunk).replace("(", "").replace(")", "")
@@ -91,7 +93,7 @@ func _parse_vector2i(text: String) -> Dictionary:
 	var result := {
 		"ok": false,
 		"value": Vector2i.ZERO,
-		"error": ""
+		"error": "",
 	}
 
 	var cleaned := text.strip_edges()

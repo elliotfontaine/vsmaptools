@@ -4,17 +4,14 @@ var top: int:
 	set(value):
 		_top.text = "z= " + str(value)
 		top = value
-
 var bottom: int:
 	set(value):
 		_bottom.text = "z= " + str(value)
 		bottom = value
-
 var left: int:
 	set(value):
 		_left.text = "x= " + str(value)
 		left = value
-
 var right: int:
 	set(value):
 		_right.text = "x= " + str(value)

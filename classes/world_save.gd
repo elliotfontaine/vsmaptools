@@ -1,4 +1,5 @@
-class_name WorldSave extends RefCounted
+class_name WorldSave
+extends RefCounted
 
 const REQUIRED_TABLES: Array[String] = [
 	"chunk",
@@ -6,7 +7,7 @@ const REQUIRED_TABLES: Array[String] = [
 	"mapchunk",
 	"mapregion",
 	"playerdata",
-	]
+]
 
 var _db: SQLite
 
@@ -28,13 +29,13 @@ static func validate_db_file(path: String) -> Error:
 
 	if not temp_db.open_db():
 		return ERR_FILE_CANT_OPEN
-	
+
 	var query := "SELECT name FROM sqlite_master WHERE type='table'"
 	if not temp_db.query(query):
 		temp_db.close_db()
 		return ERR_PARSE_ERROR
 
-	var existing_tables := {}
+	var existing_tables := { }
 	for row in temp_db.query_result:
 		if row.has("name"):
 			existing_tables[row["name"]] = true
@@ -65,8 +66,8 @@ func get_world_size() -> Vector2i:
 	# MapSizeY exists too but is usually 256 and not relevant for a 2D map size.
 	if message.has_MapSizeX() and message.has_MapSizeZ():
 		return Vector2i(message.get_MapSizeX(), message.get_MapSizeZ())
-	else:
-		return Vector2i.ZERO
+
+	return Vector2i.ZERO
 
 
 func get_savegame_identifier() -> String:
@@ -83,8 +84,8 @@ func get_savegame_identifier() -> String:
 
 	if message.has_SavegameIdentifier():
 		return message.get_SavegameIdentifier()
-	else:
-		return ""
+
+	return ""
 
 
 func _get_savegame_blob() -> PackedByteArray:
@@ -100,9 +101,9 @@ func _get_savegame_blob() -> PackedByteArray:
 		Logger.error("No rows found in gamedata table.")
 		_db.close_db()
 		return PackedByteArray()
-	
+
 	_db.close_db()
-	
+
 	var row: Dictionary = _db.query_result[0]
 	if not row.has("data"):
 		Logger.error("gamedata row has no 'data' column.")

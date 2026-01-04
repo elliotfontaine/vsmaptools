@@ -1,18 +1,27 @@
-extends Node2D
 class_name SelectionTool
+extends Node2D
 
 signal selected(rect: Rect2)
-
-@onready var nine_patch_rect: NinePatchRect = %NinePatchRect # to visualize selection rectangle
 
 var camera: Camera2D
 var is_selecting := false
 var selection_start := Vector2()
 var selection_rect := Rect2()
 
+@onready var nine_patch_rect: NinePatchRect = %NinePatchRect # to visualize selection rectangle
+
 
 func _ready() -> void:
 	camera = get_viewport().get_camera_2d()
+
+
+func _process(_delta: float) -> void:
+	if is_selecting:
+		# Continuously update the selection rectangle to match the mouse position
+		var current_mouse_position := get_global_mouse_position()
+		selection_rect = Rect2(selection_start, current_mouse_position - selection_start).abs()
+		nine_patch_rect.position = selection_rect.position
+		nine_patch_rect.size = selection_rect.size
 
 
 func _input(event: InputEvent) -> void:
@@ -40,12 +49,3 @@ func _input(event: InputEvent) -> void:
 				nine_patch_rect.visible = true
 			else:
 				nine_patch_rect.visible = false
-
-
-func _process(_delta: float) -> void:
-	if is_selecting:
-		# Continuously update the selection rectangle to match the mouse position
-		var current_mouse_position := get_global_mouse_position()
-		selection_rect = Rect2(selection_start, current_mouse_position - selection_start).abs()
-		nine_patch_rect.position = selection_rect.position
-		nine_patch_rect.size = selection_rect.size
