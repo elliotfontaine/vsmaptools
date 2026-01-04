@@ -8,32 +8,31 @@ const REQUIRED_TABLES: Array[String] = [
 	"playerdata",
 	]
 
-var _db: SQLite = null
+var _db: SQLite
 
 
-func _init(db: SQLite) -> void:
-	_db = db
-	_db.read_only = true
+func _init(path: String) -> void:
+	_db = SQLite.new()
+	_db.path = path
 
 
-static func is_valid_world(path: String) -> bool:
+static func validate_db_file(path: String) -> Error:
 	if not FileAccess.file_exists(path):
-		return false
+		return ERR_FILE_NOT_FOUND
 
 	if path.get_extension().to_lower() != "vcdbs":
-		return false
+		return ERR_FILE_UNRECOGNIZED
 
 	var temp_db := SQLite.new()
 	temp_db.path = path
-	temp_db.read_only = true
 
 	if not temp_db.open_db():
-		return false
-
+		return ERR_FILE_CANT_OPEN
+	
 	var query := "SELECT name FROM sqlite_master WHERE type='table'"
 	if not temp_db.query(query):
 		temp_db.close_db()
-		return false
+		return ERR_PARSE_ERROR
 
 	var existing_tables := {}
 	for row in temp_db.query_result:
@@ -44,9 +43,9 @@ static func is_valid_world(path: String) -> bool:
 
 	for table_name in REQUIRED_TABLES:
 		if not existing_tables.has(table_name):
-			return false
+			return ERR_INVALID_DATA
 
-	return true
+	return OK
 
 
 func get_world_size() -> Vector2i:
@@ -112,7 +111,7 @@ func _get_savegame_blob() -> PackedByteArray:
 
 	var blob: Variant = row["data"]
 
-	Logger.debug("Type of BLOB: %s" % [typeof(blob)])
+	Logger.debug("Type of BLOB: %s" % type_string(typeof(blob)))
 
 	# Depending on the SQLite addon, the blob might already be a PackedByteArray,
 	# or it might be returned as some other byte container.

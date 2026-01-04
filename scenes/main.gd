@@ -363,8 +363,12 @@ func _load_file() -> void:
 	var map_path: String
 	if _selected_file.type in [ImportType.MAP, ImportType.EXTERNAL_MAP]:
 		map_path = _selected_file.path
-	elif not WorldSave.is_valid_world(_selected_file.path):
-		Logger.error("World save is invalid: %s" % _selected_file.path)
+	elif WorldSave.validate_db_file(_selected_file.path) != OK:
+		Logger.error(
+			"World save is invalid: %s" % _selected_file.path,
+			&"main",
+			WorldSave.validate_db_file(_selected_file.path)
+		)
 		return
 	else:
 		var potential_map_path := _get_map_path_from_save_path(_selected_file.path)
@@ -391,6 +395,10 @@ func _load_file() -> void:
 	
 	map = Map.new(db)
 	add_child(map)
+	
+	if _selected_file.type == ImportType.WORLDSAVE:
+		var save := WorldSave.new(_selected_file.path)
+		map.world_size = save.get_world_size()
 
 	map.loading_step.connect(_on_map_loading_step)
 	map.loading_completed.connect(_on_map_loading_completed)
@@ -404,9 +412,7 @@ func _load_file() -> void:
 
 
 func _get_map_path_from_save_path(save_path: String) -> String:
-	var world_db := SQLite.new()
-	world_db.path = save_path
-	var save := WorldSave.new(world_db)
+	var save := WorldSave.new(save_path)
 	var save_id := save.get_savegame_identifier()
 	var map_files := DirAccess.get_files_at(VINTAGESTORYDATA_PATH.path_join("Maps"))
 	if save_id + ".db" in map_files:

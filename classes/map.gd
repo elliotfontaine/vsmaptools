@@ -166,7 +166,13 @@ func _load_pieces_threaded() -> void:
 		#await get_tree().process_frame
 	_db.close_db()
 	
-	world_size = _guess_world_size()
+	if not world_size:
+		world_size = _guess_world_size()
+		Logger.warn.call_deferred(
+			"World size was inferred from map content instead of save data; the result may be inaccurate."
+		)
+
+	
 	loading_completed.emit.call_deferred()
 
 
