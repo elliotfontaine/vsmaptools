@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Vintage Story Map Tools"
-config/version="2.2.0"
+config/version="2.3.0"
 run/main_scene="uid://dsog6tys60ik"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 run/low_processor_mode=true
