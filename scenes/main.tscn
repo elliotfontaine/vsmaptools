@@ -449,6 +449,6 @@ ignore_time_scale = true
 [connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export/ExportButton" to="." method="_on_export_button_pressed"]
 [connection signal="item_selected" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export/DownscaleOptionButton" to="." method="_on_downscale_option_button_item_selected"]
 [connection signal="item_selected" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export/FiletypeOptionButton" to="." method="_on_filetype_option_button_item_selected"]
-[connection signal="file_selected" from="ImportFileDialog" to="." method="_on_file_dialog_file_selected"]
+[connection signal="file_selected" from="ImportFileDialog" to="." method="_on_import_file_dialog_file_selected"]
 [connection signal="file_selected" from="ExportFileDialog" to="." method="_on_export_file_dialog_file_selected"]
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

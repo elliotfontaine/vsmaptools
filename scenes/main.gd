@@ -81,6 +81,7 @@ var _export_progress: int = 0:
 	set(value):
 		_export_progress = value
 		export_progress_bar.value = value
+var _t0: int
 var _target_path: String
 # Array of external files metadata for the ImportOptionButton.
 var _recently_opened: Dictionary[String, ImportType] # strings are paths
@@ -360,7 +361,7 @@ func _on_file_explorer_button_pressed() -> void:
 	import_file_dialog.popup()
 
 
-func _on_file_dialog_file_selected(path: String) -> void:
+func _on_import_file_dialog_file_selected(path: String) -> void:
 	var internal_map_dir := VINTAGESTORYDATA_PATH.path_join("Maps")
 	if path.get_base_dir().begins_with(internal_map_dir):
 		_select_file_for_import(ImportType.MAP, path)
@@ -555,13 +556,18 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 		Logger.info("Exporting map subset. Bounds: {0}, {1}".format([topleft, bottomright]))
 
 	Logger.info("Processing image for export...")
+	_t0 = Time.get_ticks_msec()
 	map.build_export_threaded(topleft, bottomright, whole_map, downscale_factor)
 
 
 func _on_export_image_ready() -> void:
-	Logger.info("Image processing completed.")
-	export_progress_bar.hide()
+	var dt_sec := int((Time.get_ticks_msec() - _t0) / 1000.0)
+	@warning_ignore("integer_division")
+	var minutes := dt_sec / 60
+	var seconds := dt_sec % 60
+	Logger.info("Image processing completed. Export time: %dm %02ds" % [minutes, seconds])
 
+	export_progress_bar.hide()
 	file_explorer_button.disabled = false
 	load_map_button.disabled = false
 	_toggle_export_buttons(true)
