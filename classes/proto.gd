@@ -159,13 +159,6 @@ class PBField:
 	var option_default: bool = false
 
 
-class PBTypeTag:
-	var ok: bool = false
-	var type: int
-	var tag: int
-	var offset: int
-
-
 class PBServiceField:
 	var field: PBField
 	var func_ref := Callable()
@@ -260,19 +253,13 @@ class PBPacker:
 		return Vector2i(0, 0) # invalid / unreachable normalement
 
 
-	static func unpack_type_tag(bytes: PackedByteArray, index: int) -> PBTypeTag:
-		var result := PBTypeTag.new()
-
+	## returns Vector3i(tag, wire_type, consumed).  consumed==0 means invalid
+	static func read_type_tag(bytes: PackedByteArray, index: int) -> Vector3i:
 		var r := read_varint(bytes, index)
 		if r.y == 0:
-			return result
-
+			return Vector3i(0, 0, 0)
 		var unpacked := r.x
-		result.ok = true
-		result.offset = r.y
-		result.type = unpacked & 0x07
-		result.tag = unpacked >> 3
-		return result
+		return Vector3i(unpacked >> 3, unpacked & 0x07, r.y)
 
 
 	static func pack_length_delimeted(type: int, tag: int, bytes: PackedByteArray) -> PackedByteArray:
@@ -524,13 +511,17 @@ class PBPacker:
 	# TODO: Bottleneck (95% of total, 15ms per call)
 	static func unpack_message(data: Dictionary, bytes: PackedByteArray, offset: int, limit: int) -> int:
 		while true:
-			var tt: PBTypeTag = unpack_type_tag(bytes, offset)
-			if tt.ok:
-				offset += tt.offset
-				var service: PBServiceField = data.get(tt.tag, null)
+			var tt := read_type_tag(bytes, offset) # Vector3i(tag, type, consumed)
+			if tt.z != 0:
+				offset += tt.z
+
+				var tag := tt.x
+				var wire_type := tt.y
+
+				var service: PBServiceField = data.get(tag, null)
 				if service != null:
 					var type: int = pb_type_from_data_type(service.field.type)
-					if type == tt.type || (tt.type == PB_TYPE.LENGTHDEL && service.field.rule == PB_RULE.REPEATED && service.field.option_packed):
+					if type == wire_type or (wire_type == PB_TYPE.LENGTHDEL and service.field.rule == PB_RULE.REPEATED and service.field.option_packed):
 						var res: int = unpack_field(bytes, offset, service.field, type, service.func_ref)
 						if res > 0:
 							service.state = PB_SERVICE_STATE.FILLED
@@ -544,7 +535,7 @@ class PBPacker:
 						else:
 							break
 				else:
-					var res: int = skip_unknown_field(bytes, offset, tt.type)
+					var res: int = skip_unknown_field(bytes, offset, wire_type)
 					if res > 0:
 						offset = res
 						if offset == limit:
@@ -557,6 +548,7 @@ class PBPacker:
 						break
 			else:
 				return offset
+		
 		return PB_ERR.UNDEFINED_STATE
 
 
