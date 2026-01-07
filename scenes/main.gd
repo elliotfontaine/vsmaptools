@@ -13,6 +13,7 @@ enum BoxProperty {
 	WORLD_SIZE_Z,
 }
 
+const DOWNSCALE_FACTORS = [1, 2, 4, 8, 16, 32]
 const VERBOSITY: SQLite.VerbosityLevel = SQLite.NORMAL
 const BoundSquareView := preload("res://scenes/bounds_square_view.gd")
 const MAX_IMAGE_SIZE := int(16E3)
@@ -28,10 +29,12 @@ const PROP_STRINGNAMES: Dictionary[BoxProperty, StringName] = {
 	BoxProperty.WORLD_SIZE_Z: &"World Size (Z axis)",
 }
 
+var VINTAGESTORYDATA_PATH: String = OS.get_data_dir().path_join("VintagestoryData")
+
 var db: SQLite = null
 var map: Map
 var export_type := ExportType.PNG
-var VINTAGESTORYDATA_PATH: String = OS.get_data_dir().path_join("VintagestoryData")
+var downscale_factor: int = DOWNSCALE_FACTORS[0]
 var min_X: int:
 	set(value):
 		_set_box_property(BoxProperty.MIN_X, value)
@@ -100,7 +103,7 @@ var _last_file_dialog_path: String = VINTAGESTORYDATA_PATH.path_join("Maps")
 @onready var import_option_button: OptionButton = %ImportOptionButton
 @onready var load_map_button: Button = %LoadMapButton
 @onready var image_size_label: Label = %ImageSizeLabel
-@onready var export_button: Button = %ExportButton
+@onready var export: HBoxContainer = %Export
 @onready var export_progress_bar: ProgressBar = %ExportProgressBar
 @onready var logs_rtl: RichTextLabel = %LogsRTL
 @onready var map_preview: MapPreview = %MapPreview
@@ -113,7 +116,7 @@ func _ready() -> void:
 	loading_map_container.hide()
 	loaded_map_info.hide()
 	export_progress_bar.hide()
-	export_button.disabled = true
+	_toggle_export_buttons(false)
 
 	var main_module := Logger.get_module(&"main")
 	var sink := RichTextLabelSink.new(
@@ -150,13 +153,22 @@ func update_displayed_bounds() -> void:
 
 
 func update_displayed_image_size() -> void:
-	var x := max_X - min_X
-	var z := max_Z - min_Z
-	if z > MAX_IMAGE_SIZE or x > MAX_IMAGE_SIZE:
-		image_size_label.text = str(x) + " x " + str(z) + " (too large)"
+	var x: int = _get_projected_image_size().x
+	var z: int = _get_projected_image_size().y
+
+	var too_large := x > MAX_IMAGE_SIZE or z > MAX_IMAGE_SIZE
+
+	image_size_label.text = "{x} x {z} px{warn}".format(
+		{
+			"x": x,
+			"z": z,
+			"warn": " (too large)" if too_large else "",
+		},
+	)
+
+	if too_large:
 		image_size_label.add_theme_color_override("font_color", Color.ORANGE_RED)
 	else:
-		image_size_label.text = str(x) + " x " + str(z)
 		image_size_label.remove_theme_color_override("font_color")
 
 
@@ -291,14 +303,34 @@ func _add_directory_files_to_option_button(
 	dir.list_dir_end()
 
 
+func _get_projected_image_size() -> Vector2i:
+	@warning_ignore("integer_division")
+	var x: int = (max_X - min_X) / downscale_factor
+	@warning_ignore("integer_division")
+	var z: int = (max_Z - min_Z) / downscale_factor
+	return Vector2i(x, z)
+
+
+func _toggle_export_buttons(enabled: bool) -> void:
+	for child in export.get_children():
+		if child is BaseButton:
+			var button := child as BaseButton
+			button.disabled = !enabled
+
+
 func _export_options_are_valid() -> bool:
-	if (max_X - min_X) > MAX_IMAGE_SIZE or (max_Z - min_Z) > MAX_IMAGE_SIZE:
+	var size_x: int = _get_projected_image_size().x
+	var size_z: int = _get_projected_image_size().y
+
+	if size_x > MAX_IMAGE_SIZE or size_z > MAX_IMAGE_SIZE:
 		Logger.error(
-			"Images larger than 16k×16k are not supported due to internal limitations. " +
-			"Please disable 'Whole Map' and use manual bounds to export the map in multiple parts.",
+			"Images larger than 16k×16k are not supported due to engine limitations. " +
+			"To proceed, either disable 'Whole Map' and export the map in multiple parts using " +
+			"manual bounds, or increase the downscale factor next to the 'Export Image' button.",
 			&"main",
 			ERR_INVALID_DATA,
 		)
+
 		return false
 
 	if whole_map:
@@ -369,7 +401,7 @@ func _load_file() -> void:
 
 	file_explorer_button.disabled = true
 	load_map_button.disabled = true
-	export_button.disabled = true
+	_toggle_export_buttons(false)
 
 	if map:
 		Logger.debug("Freeing previously loaded map")
@@ -422,7 +454,7 @@ func _on_map_loading_completed() -> void:
 
 	file_explorer_button.disabled = false
 	load_map_button.disabled = false
-	export_button.disabled = false
+	_toggle_export_buttons(true)
 
 	world_size = map.world_size
 	if world_size != Map.DEFAULT_WORLD_SIZE:
@@ -505,7 +537,7 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 	export_progress_bar.show()
 	file_explorer_button.disabled = true
 	load_map_button.disabled = true
-	export_button.disabled = true
+	_toggle_export_buttons(false)
 
 	var topleft: Vector2i
 	var bottomright: Vector2i
@@ -523,7 +555,7 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 		Logger.info("Exporting map subset. Bounds: {0}, {1}".format([topleft, bottomright]))
 
 	Logger.info("Processing image for export...")
-	map.build_export_threaded(topleft, bottomright, whole_map)
+	map.build_export_threaded(topleft, bottomright, whole_map, downscale_factor)
 
 
 func _on_export_image_ready() -> void:
@@ -532,7 +564,7 @@ func _on_export_image_ready() -> void:
 
 	file_explorer_button.disabled = false
 	load_map_button.disabled = false
-	export_button.disabled = false
+	_toggle_export_buttons(true)
 
 	var img := map.get_export_image()
 	if img:
@@ -550,6 +582,11 @@ func _on_export_image_ready() -> void:
 
 func _on_filetype_option_button_item_selected(index: int) -> void:
 	export_type = ExportType.values()[index]
+
+
+func _on_downscale_option_button_item_selected(index: int) -> void:
+	downscale_factor = DOWNSCALE_FACTORS[index]
+	update_displayed_image_size()
 
 
 func _on_selection_tool_selected(rect: Rect2) -> void:

@@ -49,8 +49,16 @@ func decode_blob(data: PackedByteArray) -> void:
 		pixel_data[i * 4 + 3] = a
 
 
-func generate_image() -> Image:
-	return Image.create_from_data(CHUNK_SIZE, CHUNK_SIZE, false, Image.FORMAT_RGBA8, pixel_data)
+func generate_image(downscale_factor: int = 1) -> Image:
+	var img := Image.create_from_data(CHUNK_SIZE, CHUNK_SIZE, false, Image.FORMAT_RGBA8, pixel_data)
+	if downscale_factor > 1:
+		@warning_ignore("integer_division")
+		img.resize(
+			CHUNK_SIZE / downscale_factor,
+			CHUNK_SIZE / downscale_factor,
+			Image.INTERPOLATE_TRILINEAR,
+		)
+	return img
 
 
 func _chunkpos_from_int(pos: int) -> Vector2i:

@@ -267,14 +267,22 @@ layout_mode = 2
 
 [node name="ImageSizeTitle" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ImageSize"]
 layout_mode = 2
-text = "Current Size : "
+text = "Image Size : "
 
 [node name="ImageSizeLabel" type="Label" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ImageSize"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 text = "1,000 x 2,000"
+text_overrun_behavior = 3
+
+[node name="ExportProgressBar" type="ProgressBar" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="Export" type="HBoxContainer" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu"]
+unique_name_in_owner = true
 layout_mode = 2
 
 [node name="ExportButton" type="Button" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export"]
@@ -284,6 +292,23 @@ size_flags_horizontal = 8
 size_flags_vertical = 10
 text = "Export Image"
 
+[node name="DownscaleOptionButton" type="OptionButton" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export"]
+layout_mode = 2
+selected = 0
+item_count = 6
+popup/item_0/text = "1:1"
+popup/item_0/id = 0
+popup/item_1/text = "1:2"
+popup/item_1/id = 1
+popup/item_2/text = "1:4"
+popup/item_2/id = 2
+popup/item_3/text = "1:8"
+popup/item_3/id = 3
+popup/item_4/text = "1:16"
+popup/item_4/id = 4
+popup/item_5/text = "1:32"
+popup/item_5/id = 5
+
 [node name="FiletypeOptionButton" type="OptionButton" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export"]
 layout_mode = 2
 selected = 0
@@ -292,11 +317,6 @@ popup/item_0/text = "PNG"
 popup/item_0/id = 0
 popup/item_1/text = "JPEG"
 popup/item_1/id = 1
-
-[node name="ExportProgressBar" type="ProgressBar" parent="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="Control" type="Control" parent="MarginContainer/VSplitContainer/HSplitContainer"]
 layout_mode = 2
@@ -427,6 +447,7 @@ ignore_time_scale = true
 [connection signal="bool_changed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Selection/ExportPropertiesBox" to="." method="_on_export_properties_box_bool_changed"]
 [connection signal="number_changed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/ScrollContainer/MarginContainer/VBoxContainer/Selection/ExportPropertiesBox" to="." method="_on_export_properties_box_number_changed"]
 [connection signal="pressed" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export/ExportButton" to="." method="_on_export_button_pressed"]
+[connection signal="item_selected" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export/DownscaleOptionButton" to="." method="_on_downscale_option_button_item_selected"]
 [connection signal="item_selected" from="MarginContainer/VSplitContainer/HSplitContainer/MarginContainer/LeftSideMenu/Export/FiletypeOptionButton" to="." method="_on_filetype_option_button_item_selected"]
 [connection signal="file_selected" from="ImportFileDialog" to="." method="_on_file_dialog_file_selected"]
 [connection signal="file_selected" from="ExportFileDialog" to="." method="_on_export_file_dialog_file_selected"]

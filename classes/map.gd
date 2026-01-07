@@ -61,6 +61,7 @@ var _task_id: int = -1
 var _export_progress := 0 # (as %)
 var _topleft: Vector2i
 var _export: Image
+var _export_downscale_factor: int
 
 
 func _init(db: SQLite) -> void:
@@ -93,11 +94,23 @@ func load_pieces() -> void:
 	_load_thread.start(_load_pieces_threaded)
 
 
-func build_export_threaded(topleft: Vector2i, bottomright: Vector2i, whole_map: bool) -> void:
+func build_export_threaded(
+		topleft: Vector2i,
+		bottomright: Vector2i,
+		whole_map: bool,
+		downscale_factor: int,
+) -> void:
 	_topleft = topleft
+	_export_downscale_factor = downscale_factor
 	var size: Vector2i = bottomright - topleft
 	var image_rect: Rect2i = Rect2i(topleft, size)
-	_export = Image.create_empty(size.x, size.y, true, Image.FORMAT_RGBA8)
+	@warning_ignore("integer_division")
+	_export = Image.create_empty(
+		size.x / downscale_factor,
+		size.y / downscale_factor,
+		false,
+		Image.FORMAT_RGBA8,
+	)
 
 	var pieces_to_process: Array[MapPiece]
 	if whole_map:
@@ -159,13 +172,12 @@ func _clean_up_worker() -> void:
 
 	for batch in _export_batches:
 		for piece: MapPiece in batch:
-			var image := piece.generate_image()
+			var image := piece.generate_image(_export_downscale_factor)
 			_export.blit_rect(
 				image,
-				Rect2i(Vector2i.ZERO, Vector2i(CHUNK_SIZE, CHUNK_SIZE)),
-				piece.block_position - _topleft,
+				image.get_used_rect(),
+				(piece.block_position - _topleft) / _export_downscale_factor,
 			)
-
 	export_image_ready.emit.call_deferred()
 
 
