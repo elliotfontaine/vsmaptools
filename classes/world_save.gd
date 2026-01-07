@@ -56,7 +56,6 @@ func get_world_size() -> Vector2i:
 		Logger.error("No gamedata blob found (empty data).")
 		return Vector2i.ZERO
 
-	# TODO: this is the bottleneck. See Proto.PBPacker.unpack_message
 	var result_code := message.from_bytes(data)
 	if result_code != Proto.PB_ERR.NO_ERRORS:
 		Logger.error("Error while decoding SaveGame protobuf (code=%s)." % str(result_code))
