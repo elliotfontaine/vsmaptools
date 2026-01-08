@@ -18,35 +18,56 @@ func _init(position: int, data: PackedByteArray) -> void:
 	blob = data
 
 
-func decode_blob(data: PackedByteArray) -> void:
+## Decodes a protobuf blob (Proto.MapPieceDB) into raw RGBA8 bytes (32x32x4).
+##
+## This is safe to call from worker threads because it does not touch any
+## instance state. Returns an empty PackedByteArray on error.
+static func decode_blob_to_rgba32(data: PackedByteArray) -> PackedByteArray:
 	var message := Proto.MapPieceDB.new()
 
 	# TODO: this is the bottleneck. See Proto.PBPacker.unpack_message
 	var result_code := message.from_bytes(data)
-
 	if result_code != Proto.PB_ERR.NO_ERRORS:
 		push_error("ERROR WHILE READING PROTOBUF DATA")
-		return
+		return PackedByteArray()
 
 	var pixels: Array[int] = message.get_Pixels()
 	if pixels.size() != CHUNK_SIZE * CHUNK_SIZE:
 		push_error("Unexpected pixel array size")
-		return
+		return PackedByteArray()
 
-	pixel_data = PackedByteArray()
-	pixel_data.resize(pixels.size() * 4) # 4 bytes per pixel
+	var out := PackedByteArray()
+	out.resize(pixels.size() * 4) # 4 bytes per pixel
 
 	for i in pixels.size():
 		var color_int := pixels[i]
-		var r := color_int & 0xFF
-		var g := (color_int >> 8) & 0xFF
-		var b := (color_int >> 16) & 0xFF
-		var a := 255
+		out[i * 4 + 0] = color_int & 0xFF # red
+		out[i * 4 + 1] = (color_int >> 8) & 0xFF # green
+		out[i * 4 + 2] = (color_int >> 16) & 0xFF # blue
+		out[i * 4 + 3] = 255 # alpha
 
-		pixel_data[i * 4 + 0] = r
-		pixel_data[i * 4 + 1] = g
-		pixel_data[i * 4 + 2] = b
-		pixel_data[i * 4 + 3] = a
+	return out
+
+
+## Convenience helper: decodes a protobuf blob straight into a Godot Image.
+## Returns null on error.
+static func decode_blob_to_image(data: PackedByteArray, downscale_factor: int = 1) -> Image:
+	var rgba := decode_blob_to_rgba32(data)
+	if rgba.is_empty():
+		return null
+	var img := Image.create_from_data(CHUNK_SIZE, CHUNK_SIZE, false, Image.FORMAT_RGBA8, rgba)
+	if downscale_factor > 1:
+		@warning_ignore("integer_division")
+		img.resize(
+			CHUNK_SIZE / downscale_factor,
+			CHUNK_SIZE / downscale_factor,
+			Image.INTERPOLATE_TRILINEAR,
+		)
+	return img
+
+
+func decode_blob(data: PackedByteArray) -> void:
+	pixel_data = decode_blob_to_rgba32(data)
 
 
 func generate_image(downscale_factor: int = 1) -> Image:

@@ -4,6 +4,24 @@ extends SubViewportContainer
 signal chunk_hovered(coordinates: Vector2i)
 signal blockpos_hovered(coordinates: Vector2i)
 
+const CHUNK_SIZE := MapPiece.CHUNK_SIZE
+const REGION_CHUNKS := Map.REGION_CHUNKS
+const REGION_SIZE_BLOCKS := Map.REGION_SIZE_BLOCKS
+const REGION_MARGIN := 1
+
+var _map: Map = null
+var _origin_chunk_abs: Vector2i = Vector2i.ZERO
+var _origin_block_abs: Vector2i = Vector2i.ZERO
+var _region_layer: Node2D
+var _region_sprites: Dictionary[Vector2i, Sprite2D] = { }
+var _wanted_region_rect: Rect2i = Rect2i(Vector2i.ZERO, Vector2i.ZERO) # region coords (half-open)
+# request generation id (ignore stale results)
+var _request_id: int = 0
+
+# camera state cache
+var _last_cam_pos: Vector2 = Vector2.INF
+var _last_cam_zoom: Vector2 = Vector2.INF
+
 var _last_hovered_chunk := Vector2i(-9999, -9999)
 var _last_hovered_block := Vector2i(-9999, -9999)
 
@@ -17,6 +35,21 @@ var _last_hovered_block := Vector2i(-9999, -9999)
 @onready var zoom_decrease_button: Button = %ZoomDecreaseButton
 @onready var zoom_increase_button: Button = %ZoomIncreaseButton
 @onready var selection_tool: SelectionTool = %SelectionTool
+
+
+func _ready() -> void:
+	# [REGION PREVIEW] create overlay layer
+	_region_layer = Node2D.new()
+	_region_layer.name = "RegionPreviewLayer"
+	tilemap.add_child(_region_layer)
+
+
+func _process(_delta: float) -> void:
+	# [REGION PREVIEW] detect pan / zoom
+	if cam.global_position != _last_cam_pos or cam.zoom != _last_cam_zoom:
+		_last_cam_pos = cam.global_position
+		_last_cam_zoom = cam.zoom
+		_update_visible_regions()
 
 
 func _input(event: InputEvent) -> void:
@@ -40,11 +73,29 @@ func _input(event: InputEvent) -> void:
 			chunk_hovered.emit(chunk_pos)
 
 
-## Fill the grid from a list of chunk coordinates
+func bind_map(map: Map) -> void:
+	if _map != null:
+		_map.region_texture_ready.disconnect(_on_region_texture_ready)
+		_map.region_texture_failed.disconnect(_on_region_texture_failed)
+
+	_map = map
+	_map.region_texture_ready.connect(_on_region_texture_ready)
+	_map.region_texture_failed.connect(_on_region_texture_failed)
+
+
+func set_origin_from_spawn(spawnpoint_abs: Vector2i) -> void:
+	_origin_chunk_abs = spawnpoint_abs / CHUNK_SIZE
+	_origin_block_abs = _origin_chunk_abs * CHUNK_SIZE
+	_update_all_region_positions()
+	_force_region_refresh()
+
+
 func draw_silhouette_preview(relative_chunk_positions: Array[Vector2i]) -> void:
 	tilemap.clear()
 	for chunk_pos in relative_chunk_positions:
 		tilemap.set_cell(chunk_pos, 0, Vector2i(1, 0))
+
+	_force_region_refresh()
 
 
 func center_view() -> void:
@@ -61,6 +112,205 @@ func center_view() -> void:
 	else:
 		cam_target = Vector2i.ZERO
 	cam.global_position = cam_target
+
+# ------------------------------------------------------------------
+# [REGION PREVIEW] region visibility & requests
+# ------------------------------------------------------------------
+
+
+func _force_region_refresh() -> void:
+	_last_cam_pos = Vector2.INF
+	_last_cam_zoom = Vector2.INF
+	_update_visible_regions()
+
+
+func _update_visible_regions() -> void:
+	if _map == null:
+		return
+
+	var rect_rel := _get_visible_block_rect_relative()
+	var rect_abs := Rect2i(
+		rect_rel.position + _origin_block_abs,
+		rect_rel.size,
+	)
+
+	var new_region_rect := _region_rect_from_block_rect(rect_abs, REGION_MARGIN)
+	if new_region_rect == _wanted_region_rect:
+		return
+
+	_request_id += 1
+	var old_region_rect := _wanted_region_rect
+	_wanted_region_rect = new_region_rect
+
+	# Remove sprites that are outside the wanted rect.
+	for r: Vector2i in _region_sprites.keys():
+		if not _wanted_region_rect.has_point(r):
+			_remove_region_sprite(r)
+
+	# Request textures only for the newly-visible regions (delta), prioritized
+	# around the viewport center.
+	var center_region := _block_to_region(rect_abs.get_center())
+	_request_new_regions(old_region_rect, _wanted_region_rect, center_region, _request_id)
+
+
+func _get_visible_block_rect_relative() -> Rect2i:
+	var viewport_size := sub_vp.size
+	var zoom := cam.zoom
+
+	var half := Vector2(
+		viewport_size.x / zoom.x,
+		viewport_size.y / zoom.y,
+	) * 0.5
+
+	var top_left := cam.global_position - half
+	return Rect2i(
+		Vector2i(floor(top_left.x), floor(top_left.y)),
+		Vector2i(ceil(half.x * 2.0), ceil(half.y * 2.0)),
+	)
+
+
+func _region_rect_from_block_rect(rect_abs: Rect2i, margin: int) -> Rect2i:
+	# Convert an absolute block rect (half-open) to a region rect (half-open).
+	# The region rect is expanded by `margin` regions on each side.
+	if rect_abs.size.x <= 0 or rect_abs.size.y <= 0:
+		return Rect2i(Vector2i.ZERO, Vector2i.ZERO)
+
+	var min_r := _block_to_region(rect_abs.position) - Vector2i(margin, margin)
+	var max_block := rect_abs.position + rect_abs.size - Vector2i.ONE
+	var max_r := _block_to_region(max_block) + Vector2i(margin, margin)
+	var size_r := (max_r - min_r) + Vector2i.ONE
+	return Rect2i(min_r, size_r)
+
+
+func _block_to_region(block_abs: Vector2i) -> Vector2i:
+	@warning_ignore("integer_division")
+	return Vector2i(
+		floor(block_abs.x / REGION_SIZE_BLOCKS),
+		floor(block_abs.y / REGION_SIZE_BLOCKS),
+	)
+
+
+func _rect_end(rect: Rect2i) -> Vector2i:
+	# Half-open end.
+	return rect.position + rect.size
+
+
+func _request_new_regions(old_rect: Rect2i, new_rect: Rect2i, center: Vector2i, request_id: int) -> void:
+	if _map == null:
+		return
+	if new_rect.size.x <= 0 or new_rect.size.y <= 0:
+		return
+
+	var regions_to_request: Array[Vector2i] = []
+
+	# If there's no overlap, request the full new rect.
+	if old_rect.size.x <= 0 or old_rect.size.y <= 0 or not old_rect.intersects(new_rect):
+		for rz in range(new_rect.position.y, _rect_end(new_rect).y):
+			for rx in range(new_rect.position.x, _rect_end(new_rect).x):
+				regions_to_request.append(Vector2i(rx, rz))
+	else:
+		var old_end := _rect_end(old_rect)
+		var new_end := _rect_end(new_rect)
+
+		# Left band (full height).
+		if new_rect.position.x < old_rect.position.x:
+			var x0 := new_rect.position.x
+			var x1 := old_rect.position.x
+			for rz in range(new_rect.position.y, new_end.y):
+				for rx in range(x0, x1):
+					regions_to_request.append(Vector2i(rx, rz))
+
+		# Right band (full height).
+		if new_end.x > old_end.x:
+			var x0 := old_end.x
+			var x1 := new_end.x
+			for rz in range(new_rect.position.y, new_end.y):
+				for rx in range(x0, x1):
+					regions_to_request.append(Vector2i(rx, rz))
+
+		# Overlapping x-range for top/bottom bands.
+		var ox0 := maxi(new_rect.position.x, old_rect.position.x)
+		var ox1 := mini(new_end.x, old_end.x)
+		if ox1 > ox0:
+			# Top band.
+			if new_rect.position.y < old_rect.position.y:
+				var y0 := new_rect.position.y
+				var y1 := old_rect.position.y
+				for rz in range(y0, y1):
+					for rx in range(ox0, ox1):
+						regions_to_request.append(Vector2i(rx, rz))
+
+			# Bottom band.
+			if new_end.y > old_end.y:
+				var y0 := old_end.y
+				var y1 := new_end.y
+				for rz in range(y0, y1):
+					for rx in range(ox0, ox1):
+						regions_to_request.append(Vector2i(rx, rz))
+
+	if not regions_to_request.is_empty():
+		_map.request_region_textures(regions_to_request, center, request_id)
+
+# ------------------------------------------------------------------
+# [REGION PREVIEW] sprites management
+# ------------------------------------------------------------------
+
+
+func _create_region_sprite(region: Vector2i) -> void:
+	var sprite := Sprite2D.new()
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	sprite.centered = false
+	sprite.position = _region_abs_to_relative_position(region)
+	_region_layer.add_child(sprite)
+	_region_sprites[region] = sprite
+
+
+func _remove_region_sprite(region: Vector2i) -> void:
+	var sprite: Sprite2D = _region_sprites.get(region)
+	if sprite != null:
+		sprite.queue_free()
+	_region_sprites.erase(region)
+
+
+func _update_all_region_positions() -> void:
+	for r: Vector2i in _region_sprites.keys():
+		_region_sprites[r].position = _region_abs_to_relative_position(r)
+
+
+func _region_abs_to_relative_position(region: Vector2i) -> Vector2:
+	var block_abs := region * REGION_SIZE_BLOCKS
+	var rel := block_abs - _origin_block_abs
+	return Vector2(rel.x, rel.y)
+
+# ------------------------------------------------------------------
+# [REGION PREVIEW] Map callbacks
+# ------------------------------------------------------------------
+
+
+func _on_region_texture_ready(region: Vector2i, texture: Texture2D, request_id: int) -> void:
+	if not _wanted_region_rect.has_point(region):
+		return
+
+	# Region empty => ensure no sprite exists.
+	if texture == null:
+		if _region_sprites.has(region):
+			_remove_region_sprite(region)
+		return
+
+	# Non-empty region => create sprite if needed, then assign texture.
+	if not _region_sprites.has(region):
+		_create_region_sprite(region)
+	_region_sprites[region].texture = texture
+
+
+func _on_region_texture_failed(region: Vector2i, error: String, request_id: int) -> void:
+	if request_id != _request_id:
+		return
+	push_warning("Region %s failed: %s" % [region, error])
+
+# ------------------------------------------------------------------
+# UI callbacks (UNCHANGED)
+# ------------------------------------------------------------------
 
 
 func _process_block_line_edit_change() -> void:

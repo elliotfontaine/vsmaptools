@@ -51,6 +51,7 @@ func _draw() -> void:
 					Vector2(i * cell_size, offset.y + size.y),
 					Vector2(i * cell_size, offset.y - size.y),
 					color,
+					1.0 / zoom,
 				)
 
 			# Horizontal lines
@@ -62,6 +63,7 @@ func _draw() -> void:
 					Vector2(offset.x + size.x, i * cell_size),
 					Vector2(offset.x - size.x, i * cell_size),
 					color,
+					1.0 / zoom,
 				)
 
 

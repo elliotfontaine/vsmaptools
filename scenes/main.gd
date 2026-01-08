@@ -461,12 +461,15 @@ func _on_map_loading_completed() -> void:
 	if world_size != Map.DEFAULT_WORLD_SIZE:
 		Logger.info("World uses a custom size: %s" % world_size)
 
+	map_preview.bind_map(map)
+	map_preview.set_origin_from_spawn(spawnpoint_abs)
 	map_preview.draw_silhouette_preview(
 		map.get_pieces_relative_chunk_positions(
 			spawnpoint_abs / map.CHUNK_SIZE,
 		),
 	)
 	map_preview.center_view()
+	map_preview._force_region_refresh()
 
 
 func _on_map_export_progressed(percent: int) -> void:

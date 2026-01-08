@@ -60,7 +60,7 @@ occlusion_enabled = false
 script = ExtResource("4_d3m4o")
 camera_path = NodePath("../PanZoomCamera")
 tilemap_path = NodePath("../TileMapLayer")
-grid_color = Color(0.0807833, 0.0807833, 0.0807833, 1)
+grid_color = Color(0.145098, 0.145098, 0.145098, 1)
 
 [node name="SelectionTool" parent="SubViewport" instance=ExtResource("4_2fjyl")]
 unique_name_in_owner = true
