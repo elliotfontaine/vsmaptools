@@ -1,20 +1,15 @@
 class_name MapPiece
 extends RefCounted
 
-const CHUNK_SIZE: int = 32
+const CHUNK_WIDTH_BLOCKS: int = MapMath.CHUNK_WIDTH_BLOCKS
 
 var blob: PackedByteArray
 var pixel_data: PackedByteArray
-var chunk_position: Vector2i
-var block_position: Vector2i:
-	set(value):
-		chunk_position = value / CHUNK_SIZE
-	get:
-		return chunk_position * CHUNK_SIZE
+var chunk_pos_abs: Vector2i
 
 
 func _init(position: int, data: PackedByteArray) -> void:
-	chunk_position = _chunkpos_from_int(position)
+	chunk_pos_abs = _chunkpos_from_int(position)
 	blob = data
 
 
@@ -32,7 +27,7 @@ static func decode_blob_to_rgba32(data: PackedByteArray) -> PackedByteArray:
 		return PackedByteArray()
 
 	var pixels: Array[int] = message.get_Pixels()
-	if pixels.size() != CHUNK_SIZE * CHUNK_SIZE:
+	if pixels.size() != MapMath.CHUNK_WIDTH_BLOCKS**2:
 		push_error("Unexpected pixel array size")
 		return PackedByteArray()
 
@@ -55,12 +50,12 @@ static func decode_blob_to_image(data: PackedByteArray, downscale_factor: int = 
 	var rgba := decode_blob_to_rgba32(data)
 	if rgba.is_empty():
 		return null
-	var img := Image.create_from_data(CHUNK_SIZE, CHUNK_SIZE, false, Image.FORMAT_RGBA8, rgba)
+	var img := Image.create_from_data(CHUNK_WIDTH_BLOCKS, CHUNK_WIDTH_BLOCKS, false, Image.FORMAT_RGBA8, rgba)
 	if downscale_factor > 1:
 		@warning_ignore("integer_division")
 		img.resize(
-			CHUNK_SIZE / downscale_factor,
-			CHUNK_SIZE / downscale_factor,
+			CHUNK_WIDTH_BLOCKS / downscale_factor,
+			CHUNK_WIDTH_BLOCKS / downscale_factor,
 			Image.INTERPOLATE_TRILINEAR,
 		)
 	return img
@@ -71,12 +66,12 @@ func decode_blob(data: PackedByteArray) -> void:
 
 
 func generate_image(downscale_factor: int = 1) -> Image:
-	var img := Image.create_from_data(CHUNK_SIZE, CHUNK_SIZE, false, Image.FORMAT_RGBA8, pixel_data)
+	var img := Image.create_from_data(CHUNK_WIDTH_BLOCKS, CHUNK_WIDTH_BLOCKS, false, Image.FORMAT_RGBA8, pixel_data)
 	if downscale_factor > 1:
 		@warning_ignore("integer_division")
 		img.resize(
-			CHUNK_SIZE / downscale_factor,
-			CHUNK_SIZE / downscale_factor,
+			CHUNK_WIDTH_BLOCKS / downscale_factor,
+			CHUNK_WIDTH_BLOCKS / downscale_factor,
 			Image.INTERPOLATE_TRILINEAR,
 		)
 	return img

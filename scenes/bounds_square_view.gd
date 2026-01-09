@@ -23,8 +23,8 @@ var right: int:
 @onready var _right: Label = %Right
 
 
-func set_bounds_from_vect(top_left: Vector2i, bottom_right: Vector2i) -> void:
-	top = top_left.y
-	bottom = bottom_right.y
-	left = top_left.x
-	right = bottom_right.x
+func set_bounds_from_rect2i(bounds: Rect2i) -> void:
+	top = bounds.position.y
+	bottom = bounds.end.y
+	left = bounds.position.x
+	right = bounds.end.x

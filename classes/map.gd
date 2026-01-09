@@ -12,54 +12,19 @@ signal region_texture_failed(region: Vector2i, error: String, request_id: int)
 signal region_cache_evicted(region: Vector2i)
 
 const TABLE_NAME := "mappiece"
-const CHUNK_SIZE: int = MapPiece.CHUNK_SIZE
 const STEP_SIZE_PERCENT := 0.02
 const N_BATCHES := 100
-
-# Region streaming constants
-const REGION_CHUNKS: int = 16
-const REGION_SIZE_BLOCKS: int = REGION_CHUNKS * CHUNK_SIZE # 512
 const DEFAULT_REGION_CACHE_CAPACITY: int = 100
 
-@warning_ignore_start("narrowing_conversion")
+@warning_ignore("narrowing_conversion")
 const DEFAULT_WORLD_SIZE := Vector2i(1024E3, 1024E3)
-const WORLD_SIZE_PRESETS: Array[int] = [
-	32,
-	64,
-	128,
-	256,
-	384,
-	512,
-	1024,
-	5120,
-	10240,
-	25600,
-	51200,
-	102400,
-	128E3,
-	256E3,
-	384E3,
-	512E3,
-	600E3,
-	1024E3,
-	2048E3,
-	4096E3,
-	8192E3,
-]
-@warning_ignore_restore("narrowing_conversion")
 
-var chunks_count: int = 0
 var world_size: Vector2i = Vector2i.ZERO
-var top_left_chunk: Vector2i = Vector2i.MAX
-var bottom_right_chunk: Vector2i = Vector2i.MIN
-var top_left_block: Vector2i:
-	get:
-		var unset := top_left_chunk == Vector2i.MAX
-		return Vector2i.MAX if unset else top_left_chunk * CHUNK_SIZE
-var bottom_right_block: Vector2i:
-	get:
-		var unset := bottom_right_chunk == Vector2i.MIN
-		return Vector2i.MIN if unset else (bottom_right_chunk + Vector2i.ONE) * Map.CHUNK_SIZE
+var chunks_count: int = 0
+
+## Explored bounds in chunk space, absolute.
+## Invariant (once set): size is inclusive, i.e. size == (max - min) + 1
+var explored_chunks_rect_abs: Rect2i = Rect2i(0, 0, 0, 0)
 
 var _load_thread: Thread
 var _db: SQLite = null
@@ -72,8 +37,8 @@ var _region_provider: RegionTextureProvider
 var _export_batches: Array[Array]
 var _task_id: int = -1
 var _export_progress := 0 # (as %)
-var _topleft: Vector2i
-var _export: Image
+var _export_topleft_block_abs: Vector2i
+var _export_image: Image
 var _export_downscale_factor: int
 
 
@@ -123,19 +88,21 @@ func load_pieces() -> void:
 
 
 func build_export_threaded(
-		topleft: Vector2i,
-		bottomright: Vector2i,
+		topleft_block_abs: Vector2i,
+		bottomright_block_abs: Vector2i,
 		whole_map: bool,
 		downscale_factor: int,
 ) -> void:
-	_topleft = topleft
+	_export_topleft_block_abs = topleft_block_abs
 	_export_downscale_factor = downscale_factor
-	var size: Vector2i = bottomright - topleft
-	var image_rect: Rect2i = Rect2i(topleft, size)
+
+	var export_size_blocks: Vector2i = bottomright_block_abs - topleft_block_abs
+	var export_block_rect_abs: Rect2i = Rect2i(topleft_block_abs, export_size_blocks)
+
 	@warning_ignore("integer_division")
-	_export = Image.create_empty(
-		size.x / downscale_factor,
-		size.y / downscale_factor,
+	_export_image = Image.create_empty(
+		export_size_blocks.x / downscale_factor,
+		export_size_blocks.y / downscale_factor,
 		false,
 		Image.FORMAT_RGBA8,
 	)
@@ -145,8 +112,9 @@ func build_export_threaded(
 		pieces_to_process = _map_pieces.values()
 	else:
 		for piece: MapPiece in _map_pieces.values():
-			var piece_rect := Rect2i(piece.block_position, Vector2i(CHUNK_SIZE, CHUNK_SIZE))
-			if image_rect.has_point(piece.block_position) or image_rect.intersects(piece_rect):
+			var piece_block_rect_abs := MapMath.chunk_pos_to_block_rect(piece.chunk_pos_abs)
+			# Keep pieces that overlap the export rect (in block coordinates).
+			if export_block_rect_abs.has_point(piece_block_rect_abs.position) or export_block_rect_abs.intersects(piece_block_rect_abs):
 				pieces_to_process.append(piece)
 
 	_export_batches = Utils.split_array_evenly(pieces_to_process, N_BATCHES)
@@ -189,33 +157,29 @@ func request_region_texture(region: Vector2i, priority: int = 0, request_id: int
 		_region_provider.request_region(region, priority, request_id)
 
 
-func get_pieces_relative_chunk_positions(origin_chunk: Vector2i) -> Array[Vector2i]:
-	var ret: Array[Vector2i]
-	for pos: Vector2i in _map_pieces.keys():
-		ret.append(pos - origin_chunk)
-	return ret
+func get_pieces_chunk_pos_abs() -> Array[Vector2i]:
+	return _map_pieces.keys()
 
 
 func get_export_image() -> Image:
 	if _task_id != -1 and not WorkerThreadPool.is_task_completed(_task_id):
 		Logger.warn("Export worker still alive (unexpected).")
 		return null
-
-	return _export
+	return _export_image
 
 
 func get_map_density() -> float:
-	if top_left_chunk == Vector2i.MAX or bottom_right_chunk == Vector2i.MIN:
+	if not explored_chunks_rect_abs.has_area():
 		return 0.0
-	var size := (
-		(bottom_right_chunk.x - top_left_chunk.x + 1) *
-		(bottom_right_chunk.y - top_left_chunk.y + 1)
-	)
-	return float(chunks_count) / float(size)
+	var rect_total_chunks := explored_chunks_rect_abs.get_area()
+	return float(chunks_count) / float(rect_total_chunks)
 
 
-func get_explored_region_center() -> Vector2i:
-	return (top_left_block + bottom_right_block) / 2
+func get_explored_block_center_abs() -> Vector2i:
+	var explored_block_rect_abs := MapMath.chunk_rect_to_block_rect(explored_chunks_rect_abs)
+	if explored_block_rect_abs.size == Vector2i.ZERO:
+		return Vector2i.ZERO
+	return (explored_block_rect_abs.position + explored_block_rect_abs.end) / 2
 
 
 func _process_export_batch(batch_index: int) -> void:
@@ -232,10 +196,11 @@ func _clean_up_worker() -> void:
 	for batch in _export_batches:
 		for piece: MapPiece in batch:
 			var image := piece.generate_image(_export_downscale_factor)
-			_export.blit_rect(
+			var piece_block_pos_abs := MapMath.chunk_pos_to_block_pos(piece.chunk_pos_abs)
+			_export_image.blit_rect(
 				image,
 				image.get_used_rect(),
-				(piece.block_position - _topleft) / _export_downscale_factor,
+				(piece_block_pos_abs - _export_topleft_block_abs) / _export_downscale_factor,
 			)
 	export_image_ready.emit.call_deferred()
 
@@ -250,8 +215,8 @@ func _load_pieces_threaded() -> void:
 		_db.query(query)
 		for row in _db.query_result:
 			var map_piece := MapPiece.new(row["position"], row["data"])
-			_map_pieces[map_piece.chunk_position] = map_piece
-			_update_bounds(map_piece.chunk_position)
+			_map_pieces[map_piece.chunk_pos_abs] = map_piece
+			_update_explored_chunks_rect_abs(map_piece.chunk_pos_abs)
 		step += 1
 		loading_step.emit.call_deferred(STEP_SIZE_PERCENT * step)
 	_db.close_db()
@@ -266,15 +231,14 @@ func _load_pieces_threaded() -> void:
 	loading_completed.emit.call_deferred()
 
 
-func _update_bounds(mappiece_pos: Vector2i) -> void:
-	if mappiece_pos.x < top_left_chunk.x:
-		top_left_chunk.x = mappiece_pos.x
-	if mappiece_pos.y < top_left_chunk.y:
-		top_left_chunk.y = mappiece_pos.y
-	if mappiece_pos.x > bottom_right_chunk.x:
-		bottom_right_chunk.x = mappiece_pos.x
-	if mappiece_pos.y > bottom_right_chunk.y:
-		bottom_right_chunk.y = mappiece_pos.y
+func _update_explored_chunks_rect_abs(chunk_pos_abs: Vector2i) -> void:
+	if not explored_chunks_rect_abs.has_area():
+		explored_chunks_rect_abs = Rect2i(chunk_pos_abs, Vector2i.ONE)
+		return
+	
+	explored_chunks_rect_abs = explored_chunks_rect_abs.expand(chunk_pos_abs)
+	explored_chunks_rect_abs = explored_chunks_rect_abs.expand(chunk_pos_abs + Vector2i.ONE)
+
 
 
 func _set_chunks_count() -> void:
@@ -285,21 +249,28 @@ func _set_chunks_count() -> void:
 
 
 func _guess_world_size() -> Vector2i:
-	if top_left_chunk == Vector2i.MAX or bottom_right_chunk == Vector2i.MIN:
+	if not explored_chunks_rect_abs.has_area():
 		return DEFAULT_WORLD_SIZE
+
+	var explored_block_rect_abs := MapMath.chunk_rect_to_block_rect(explored_chunks_rect_abs)
+	if explored_block_rect_abs.size == Vector2i.ZERO:
+		return DEFAULT_WORLD_SIZE
+
+	# We want the last explored block (inclusive) for the preset checks.
+	var bottom_right_block_pos_abs := explored_block_rect_abs.end - Vector2i.ONE
 
 	var possible_x_sizes: Array[int] = []
 	var possible_z_sizes: Array[int] = []
-	for size in WORLD_SIZE_PRESETS:
+	for size in MapMath.WORLD_SIZE_PRESETS:
 		var s := int(size)
-		if s >= bottom_right_block.x:
+		if s >= bottom_right_block_pos_abs.x:
 			possible_x_sizes.append(s)
-		if s >= bottom_right_block.y:
+		if s >= bottom_right_block_pos_abs.y:
 			possible_z_sizes.append(s)
 
-	var explored_center := get_explored_region_center()
+	var explored_center_abs := get_explored_block_center_abs()
 
-	# Choose the preset whose center is the closest to the explored region center
+	# Choose the preset whose center is the closest to the explored region center.
 	var pick_best_size := func(possible_sizes: Array[int], explored_axis_center: int) -> int:
 		if possible_sizes.is_empty():
 			return DEFAULT_WORLD_SIZE.x
@@ -314,9 +285,8 @@ func _guess_world_size() -> Vector2i:
 				best_fit_size = s
 		return best_fit_size
 
-	var best_x: int = pick_best_size.call(possible_x_sizes, explored_center.x)
-	var best_z: int = pick_best_size.call(possible_z_sizes, explored_center.y)
-
+	var best_x: int = pick_best_size.call(possible_x_sizes, explored_center_abs.x)
+	var best_z: int = pick_best_size.call(possible_z_sizes, explored_center_abs.y)
 	return Vector2i(best_x, best_z)
 
 
@@ -566,14 +536,14 @@ class RegionTextureProvider extends RefCounted:
 
 	func _collect_region_inputs(region: Vector2i) -> Array[Dictionary]:
 		# Region coordinates are in units of 16 chunks.
-		var origin_chunk := region * REGION_CHUNKS
+		var origin_chunk_abs := MapMath.region_pos_to_chunk_pos(region)
 		var inputs: Array[Dictionary] = []
 
 		# IMPORTANT: read _map._map_pieces only from the main thread.
-		for dz in REGION_CHUNKS:
-			for dx in REGION_CHUNKS:
-				var chunk_pos := origin_chunk + Vector2i(dx, dz)
-				var piece: MapPiece = _map._map_pieces.get(chunk_pos)
+		for dz in range(MapMath.REGION_WIDTH_CHUNKS):
+			for dx in range(MapMath.REGION_WIDTH_CHUNKS):
+				var chunk_pos_abs := origin_chunk_abs + Vector2i(dx, dz)
+				var piece: MapPiece = _map._map_pieces.get(chunk_pos_abs)
 				if piece == null:
 					continue
 				inputs.append(
@@ -588,7 +558,9 @@ class RegionTextureProvider extends RefCounted:
 
 
 	func _worker_build_region(region: Vector2i, request_id: int, inputs: Array[Dictionary]) -> void:
-		var img := Image.create_empty(REGION_SIZE_BLOCKS, REGION_SIZE_BLOCKS, false, _FORMAT)
+		var region_block_size := MapMath.region_pos_to_block_rect(Vector2i.ZERO).size
+		var chunk_block_size := MapMath.chunk_pos_to_block_rect(Vector2i.ZERO).size
+		var img := Image.create_empty(region_block_size.x, region_block_size.y, false, _FORMAT)
 		img.fill(Color(0, 0, 0, 0))
 
 		for item: Dictionary in inputs:
@@ -600,11 +572,11 @@ class RegionTextureProvider extends RefCounted:
 			var rgba := MapPiece.decode_blob_to_rgba32(blob)
 			if rgba.is_empty():
 				continue
-			var chunk_img := Image.create_from_data(CHUNK_SIZE, CHUNK_SIZE, false, _FORMAT, rgba)
+			var chunk_img := Image.create_from_data(chunk_block_size.x, chunk_block_size.y, false, _FORMAT, rgba)
 			img.blit_rect(
 				chunk_img,
-				Rect2i(Vector2i.ZERO, Vector2i(CHUNK_SIZE, CHUNK_SIZE)),
-				Vector2i(dx * CHUNK_SIZE, dz * CHUNK_SIZE),
+				Rect2i(Vector2i.ZERO, chunk_block_size),
+				Vector2i(dx * chunk_block_size.x, dz * chunk_block_size.y),
 			)
 
 		_results_mutex.lock()

@@ -74,9 +74,10 @@ var world_size: Vector2i:
 			_get_box_property(BoxProperty.WORLD_SIZE_X),
 			_get_box_property(BoxProperty.WORLD_SIZE_Z),
 		)
-var spawnpoint_abs: Vector2i:
+var spawnpoint_block_abs: Vector2i:
 	get:
 		return world_size / 2
+
 var _export_progress: int = 0:
 	set(value):
 		_export_progress = value
@@ -147,10 +148,14 @@ func _ready() -> void:
 func update_displayed_bounds() -> void:
 	if not map:
 		return
-	bounds_square_view.set_bounds_from_vect(
-		map.top_left_block - spawnpoint_abs * int(use_relative_coords),
-		map.bottom_right_block - spawnpoint_abs * int(use_relative_coords),
-	)
+
+	var block_rect := MapMath.chunk_rect_to_block_rect(map.explored_chunks_rect_abs)
+	if use_relative_coords:
+		block_rect.position = MapMath.block_abs_to_block_rel(
+			block_rect.position,
+			spawnpoint_block_abs,
+		)
+	bounds_square_view.set_bounds_from_rect2i(block_rect)
 
 
 func update_displayed_image_size() -> void:
@@ -209,8 +214,10 @@ func _select_file_for_import(type: ImportType, path: String) -> void:
 
 
 func _set_selection_to_bounds() -> void:
-	var tl := map.top_left_block - spawnpoint_abs * int(use_relative_coords)
-	var br := map.bottom_right_block - spawnpoint_abs * int(use_relative_coords)
+	var tl_abs := MapMath.chunk_pos_to_block_pos(map.explored_chunks_rect_abs.position)
+	var br_abs := MapMath.chunk_pos_to_block_pos(map.explored_chunks_rect_abs.end)
+	var tl := tl_abs - spawnpoint_block_abs * int(use_relative_coords)
+	var br := br_abs - spawnpoint_block_abs * int(use_relative_coords)
 	min_X = tl.x
 	max_X = br.x
 	min_Z = tl.y
@@ -450,6 +457,10 @@ func _on_map_loading_completed() -> void:
 	map_loading_bar.value = 0.0
 	loaded_map_info.show()
 
+	world_size = map.world_size
+	if world_size != Map.DEFAULT_WORLD_SIZE:
+		Logger.info("World uses a custom size: %s" % world_size)
+
 	if whole_map:
 		_set_selection_to_bounds()
 
@@ -457,17 +468,15 @@ func _on_map_loading_completed() -> void:
 	load_map_button.disabled = false
 	_toggle_export_buttons(true)
 
-	world_size = map.world_size
-	if world_size != Map.DEFAULT_WORLD_SIZE:
-		Logger.info("World uses a custom size: %s" % world_size)
-
 	map_preview.bind_map(map)
-	map_preview.set_origin_from_spawn(spawnpoint_abs)
-	map_preview.draw_silhouette_preview(
-		map.get_pieces_relative_chunk_positions(
-			spawnpoint_abs / map.CHUNK_SIZE,
+	map_preview.set_origin_from_spawn(spawnpoint_block_abs)
+	var cells_coord: Array[Vector2i]
+	cells_coord.assign(
+		map.get_pieces_chunk_pos_abs().map(
+			MapMath.chunk_abs_to_chunk_rel.bind(spawnpoint_block_abs),
 		),
 	)
+	map_preview.draw_silhouette_preview(cells_coord)
 	map_preview.center_view()
 	map_preview._force_region_refresh()
 
@@ -488,7 +497,7 @@ func _on_timer_timeout() -> void:
 
 func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> void:
 	if key == PROP_STRINGNAMES[BoxProperty.USE_RELATIVE]:
-		var diff := spawnpoint_abs
+		var diff := spawnpoint_block_abs
 		var diff_sign := -1 if is_true else 1
 		min_X += diff.x * diff_sign
 		max_X += diff.x * diff_sign
@@ -515,7 +524,7 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 
 func _on_export_properties_box_number_changed(_key: StringName, _new_value: bool) -> void:
 	update_displayed_image_size() # for changes to min_X, max_X, min_Z, max_Z
-	update_displayed_bounds() # for changes to spawnpoint_abs
+	update_displayed_bounds() # for changes to spawnpoint_block_abs
 
 
 func _on_export_button_pressed() -> void:
@@ -546,13 +555,13 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 	var topleft: Vector2i
 	var bottomright: Vector2i
 	if whole_map:
-		topleft = map.top_left_block
-		bottomright = map.bottom_right_block
+		topleft = map.top_left_block_abs
+		bottomright = map.bottom_right_block_abs
 		Logger.info("Exporting whole map. Bounds: {0}, {1}".format([topleft, bottomright]))
 	else:
 		if use_relative_coords:
-			topleft = Vector2i(min_X, min_Z) + spawnpoint_abs
-			bottomright = Vector2i(max_X, max_Z) + spawnpoint_abs
+			topleft = Vector2i(min_X, min_Z) + spawnpoint_block_abs
+			bottomright = Vector2i(max_X, max_Z) + spawnpoint_block_abs
 		else:
 			topleft = Vector2i(min_X, min_Z)
 			bottomright = Vector2i(max_X, max_Z)
@@ -602,10 +611,10 @@ func _on_selection_tool_selected(rect: Rect2) -> void:
 	if whole_map:
 		whole_map = false
 	var rect_i := Rect2i(rect)
-	min_X = rect_i.position.x + (spawnpoint_abs.x * int(!use_relative_coords))
-	min_Z = rect_i.position.y + (spawnpoint_abs.y * int(!use_relative_coords))
-	max_X = rect_i.end.x + (spawnpoint_abs.x * int(!use_relative_coords))
-	max_Z = rect_i.end.y + (spawnpoint_abs.y * int(!use_relative_coords))
+	min_X = rect_i.position.x + (spawnpoint_block_abs.x * int(!use_relative_coords))
+	min_Z = rect_i.position.y + (spawnpoint_block_abs.y * int(!use_relative_coords))
+	max_X = rect_i.end.x + (spawnpoint_block_abs.x * int(!use_relative_coords))
+	max_Z = rect_i.end.y + (spawnpoint_block_abs.y * int(!use_relative_coords))
 
 
 func _on_import_option_button_item_selected(index: int) -> void:

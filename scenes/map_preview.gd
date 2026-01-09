@@ -4,9 +4,6 @@ extends SubViewportContainer
 signal chunk_hovered(coordinates: Vector2i)
 signal blockpos_hovered(coordinates: Vector2i)
 
-const CHUNK_SIZE := MapPiece.CHUNK_SIZE
-const REGION_CHUNKS := Map.REGION_CHUNKS
-const REGION_SIZE_BLOCKS := Map.REGION_SIZE_BLOCKS
 const REGION_MARGIN := 1
 
 var _map: Map = null
@@ -61,7 +58,7 @@ func _input(event: InputEvent) -> void:
 		return
 
 	var block_pos: Vector2i = Vector2i(cam.get_global_mouse_position())
-	var chunk_pos := tilemap.local_to_map(block_pos)
+	var chunk_pos := MapMath.block_pos_to_chunk_pos(block_pos)
 	if block_pos != _last_hovered_block:
 		_last_hovered_block = block_pos
 		block_pos_line_edit.text = str(block_pos).replace("(", "").replace(")", "")
@@ -84,8 +81,8 @@ func bind_map(map: Map) -> void:
 
 
 func set_origin_from_spawn(spawnpoint_abs: Vector2i) -> void:
-	_origin_chunk_abs = spawnpoint_abs / CHUNK_SIZE
-	_origin_block_abs = _origin_chunk_abs * CHUNK_SIZE
+	_origin_chunk_abs = spawnpoint_abs / MapMath.CHUNK_WIDTH_BLOCKS
+	_origin_block_abs = _origin_chunk_abs * MapMath.CHUNK_WIDTH_BLOCKS
 	_update_all_region_positions()
 	_force_region_refresh()
 
@@ -104,7 +101,7 @@ func center_view() -> void:
 	if tilemap.get_cell_source_id(Vector2i.ZERO) != -1:
 		cam_target = Vector2i.ZERO
 	elif tilemap.get_cell_source_id(explored_rect_center_chunk) != -1:
-		cam_target = explored_rect_center_chunk * Map.CHUNK_SIZE
+		cam_target = explored_rect_center_chunk * MapMath.CHUNK_WIDTH_BLOCKS
 		Logger.warn(
 			"No explored chunk at (0,0). " +
 			"Centering view on the center of the explored map area instead.",
@@ -134,13 +131,13 @@ func _update_visible_regions() -> void:
 		rect_rel.size,
 	)
 
-	var new_region_rect := _region_rect_from_block_rect(rect_abs, REGION_MARGIN)
-	if new_region_rect == _wanted_region_rect:
+	var new_region_rect_abs := MapMath.block_rect_to_region_rect(rect_abs, REGION_MARGIN)
+	if new_region_rect_abs == _wanted_region_rect:
 		return
 
 	_request_id += 1
 	var old_region_rect := _wanted_region_rect
-	_wanted_region_rect = new_region_rect
+	_wanted_region_rect = new_region_rect_abs
 
 	# Remove sprites that are outside the wanted rect.
 	for r: Vector2i in _region_sprites.keys():
@@ -149,8 +146,8 @@ func _update_visible_regions() -> void:
 
 	# Request textures only for the newly-visible regions (delta), prioritized
 	# around the viewport center.
-	var center_region := _block_to_region(rect_abs.get_center())
-	_request_new_regions(old_region_rect, _wanted_region_rect, center_region, _request_id)
+	var center_region_abs := MapMath.block_pos_to_region_pos(rect_abs.get_center())
+	_request_new_regions(old_region_rect, _wanted_region_rect, center_region_abs, _request_id)
 
 
 func _get_visible_block_rect_relative() -> Rect2i:
@@ -169,32 +166,6 @@ func _get_visible_block_rect_relative() -> Rect2i:
 	)
 
 
-func _region_rect_from_block_rect(rect_abs: Rect2i, margin: int) -> Rect2i:
-	# Convert an absolute block rect (half-open) to a region rect (half-open).
-	# The region rect is expanded by `margin` regions on each side.
-	if rect_abs.size.x <= 0 or rect_abs.size.y <= 0:
-		return Rect2i(Vector2i.ZERO, Vector2i.ZERO)
-
-	var min_r := _block_to_region(rect_abs.position) - Vector2i(margin, margin)
-	var max_block := rect_abs.position + rect_abs.size - Vector2i.ONE
-	var max_r := _block_to_region(max_block) + Vector2i(margin, margin)
-	var size_r := (max_r - min_r) + Vector2i.ONE
-	return Rect2i(min_r, size_r)
-
-
-func _block_to_region(block_abs: Vector2i) -> Vector2i:
-	@warning_ignore("integer_division")
-	return Vector2i(
-		floor(block_abs.x / REGION_SIZE_BLOCKS),
-		floor(block_abs.y / REGION_SIZE_BLOCKS),
-	)
-
-
-func _rect_end(rect: Rect2i) -> Vector2i:
-	# Half-open end.
-	return rect.position + rect.size
-
-
 func _request_new_regions(old_rect: Rect2i, new_rect: Rect2i, center: Vector2i, request_id: int) -> void:
 	if _map == null:
 		return
@@ -205,12 +176,12 @@ func _request_new_regions(old_rect: Rect2i, new_rect: Rect2i, center: Vector2i, 
 
 	# If there's no overlap, request the full new rect.
 	if old_rect.size.x <= 0 or old_rect.size.y <= 0 or not old_rect.intersects(new_rect):
-		for rz in range(new_rect.position.y, _rect_end(new_rect).y):
-			for rx in range(new_rect.position.x, _rect_end(new_rect).x):
+		for rz in range(new_rect.position.y, new_rect.end.y):
+			for rx in range(new_rect.position.x, new_rect.end.x):
 				regions_to_request.append(Vector2i(rx, rz))
 	else:
-		var old_end := _rect_end(old_rect)
-		var new_end := _rect_end(new_rect)
+		var old_end := old_rect.end
+		var new_end := new_rect.end
 
 		# Left band (full height).
 		if new_rect.position.x < old_rect.position.x:
@@ -278,7 +249,7 @@ func _update_all_region_positions() -> void:
 
 
 func _region_abs_to_relative_position(region: Vector2i) -> Vector2:
-	var block_abs := region * REGION_SIZE_BLOCKS
+	var block_abs := region * MapMath.REGION_WIDTH_BLOCKS
 	var rel := block_abs - _origin_block_abs
 	return Vector2(rel.x, rel.y)
 
@@ -336,7 +307,7 @@ func _process_chunk_line_edit_change() -> void:
 		Logger.debug("Vector2i correctly parsed : " + str(parsed.value))
 		if parsed.value != _last_hovered_chunk:
 			_last_hovered_chunk = parsed.value
-			cam.global_position = _last_hovered_chunk * Map.CHUNK_SIZE
+			cam.global_position = _last_hovered_chunk * MapMath.CHUNK_WIDTH_BLOCKS
 
 
 func _parse_vector2i(text: String) -> Dictionary:
