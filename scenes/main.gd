@@ -478,7 +478,6 @@ func _on_map_loading_completed() -> void:
 	)
 	map_preview.draw_silhouette_preview(cells_coord)
 	map_preview.center_view()
-	map_preview._force_region_refresh()
 
 
 func _on_map_export_progressed(percent: int) -> void:
@@ -555,8 +554,9 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 	var topleft: Vector2i
 	var bottomright: Vector2i
 	if whole_map:
-		topleft = MapMath.chunk_pos_to_block_pos(map.explored_chunks_rect_abs.position)
-		bottomright = MapMath.chunk_pos_to_block_pos(map.explored_chunks_rect_abs.end)
+		var block_rect_abs := MapMath.chunk_rect_to_block_rect(map.explored_chunks_rect_abs)
+		topleft = block_rect_abs.position
+		bottomright = block_rect_abs.end
 		Logger.info("Exporting whole map. Bounds: {0}, {1}".format([topleft, bottomright]))
 	else:
 		topleft = Vector2i(min_x, min_z) + spawnpoint_block_abs * int(use_relative_coords)

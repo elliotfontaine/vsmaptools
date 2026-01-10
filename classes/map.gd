@@ -130,8 +130,6 @@ func build_export_threaded(
 		true,
 	)
 
-# --- Region preview streaming API (forwarded to RegionTextureProvider) ---
-
 
 func set_region_cache_capacity(max_regions: int) -> void:
 	if _region_provider != null:

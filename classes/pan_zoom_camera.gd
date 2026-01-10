@@ -10,42 +10,37 @@ const PAN_SPEED := 10
 @export var max_zoom := 5.0
 @export var zoom_factor := 0.1
 
-var position_before_drag: Vector2
-var position_before_drag2: Vector2
-var zoom_level: float = 1:
-	set(value):
-		zoom_changed.emit(value)
-		zoom_level = value
+var _position_before_drag: Vector2
+var _position_before_drag2: Vector2
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("zoom_in"):
-		set_zoom_level(zoom_level + zoom_factor)
+		set_zoom_level(zoom.x + zoom_factor)
 	elif event.is_action_pressed("zoom_out"):
-		set_zoom_level(zoom_level - zoom_factor)
+		set_zoom_level(zoom.x - zoom_factor)
 	elif event.is_action_pressed("camera_drag"):
 		var mouse_event := event as InputEventMouseButton
-		position_before_drag = mouse_event.global_position
-		position_before_drag2 = self.global_position
+		_position_before_drag = mouse_event.global_position
+		_position_before_drag2 = self.global_position
 	elif event.is_action_released("camera_drag"):
-		position_before_drag = Vector2.ZERO
+		_position_before_drag = Vector2.ZERO
 	elif event is InputEventPanGesture:
 		var pan_gesture := event as InputEventPanGesture
-		self.global_position += pan_gesture.delta * PAN_SPEED / zoom_level
+		self.global_position += pan_gesture.delta * PAN_SPEED / zoom.x
 	elif event is InputEventScreenDrag:
 		var screen_drag := event as InputEventScreenDrag
 		self.global_position -= screen_drag.relative
 	elif event is InputEventMagnifyGesture:
 		var magnify_gesture := event as InputEventMagnifyGesture
 		if magnify_gesture.factor > 1:
-			set_zoom_level(zoom_level + (zoom_factor * 0.5))
+			set_zoom_level(zoom.x + (zoom_factor * 0.5))
 		elif magnify_gesture.factor < 1:
-			set_zoom_level(zoom_level - (zoom_factor * 0.5))
+			set_zoom_level(zoom.x - (zoom_factor * 0.5))
 
-	if position_before_drag and event is InputEventMouseMotion:
+	if _position_before_drag and event is InputEventMouseMotion:
 		var mouse_motion := event as InputEventMouseMotion
-		self.global_position = position_before_drag2 + (position_before_drag - mouse_motion.global_position) * (1 / zoom_level)
-	position_changed.emit(offset)
+		self.global_position = _position_before_drag2 + (_position_before_drag - mouse_motion.global_position) * (1 / zoom.x)
 
 
 func _set(property: StringName, _value: Variant) -> bool:
@@ -54,13 +49,12 @@ func _set(property: StringName, _value: Variant) -> bool:
 	return false
 
 
-func set_zoom_level(level: float, mouse_world_position := self.get_global_mouse_position()) -> void:
-	var old_zoom_level := zoom_level
+func set_zoom_level(level: float) -> void:
+	var mouse_world_position := self.get_global_mouse_position()
+	var clamped_zoom_level := clampf(level, min_zoom, max_zoom)
+	var direction := mouse_world_position - self.global_position
+	var new_position := self.global_position + direction - direction / (clamped_zoom_level / zoom.x)
 
-	zoom_level = clampf(level, min_zoom, max_zoom)
-
-	var direction := (mouse_world_position - self.global_position)
-	var new_position := self.global_position + direction - direction / (zoom_level / old_zoom_level)
-
-	self.zoom = Vector2(zoom_level, zoom_level)
+	self.zoom = Vector2(clamped_zoom_level, clamped_zoom_level)
 	self.global_position = new_position
+	zoom_changed.emit(clamped_zoom_level)

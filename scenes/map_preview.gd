@@ -14,10 +14,6 @@ var _wanted_region_rect: Rect2i = Rect2i(Vector2i.ZERO, Vector2i.ZERO) # region 
 # request generation id (ignore stale results)
 var _request_id: int = 0
 
-# camera state cache
-var _last_cam_pos: Vector2 = Vector2.INF
-var _last_cam_zoom: Vector2 = Vector2.INF
-
 var _last_hovered_chunk := Vector2i(-9999, -9999)
 var _last_hovered_block := Vector2i(-9999, -9999)
 
@@ -31,14 +27,6 @@ var _last_hovered_block := Vector2i(-9999, -9999)
 @onready var zoom_decrease_button: Button = %ZoomDecreaseButton
 @onready var zoom_increase_button: Button = %ZoomIncreaseButton
 @onready var selection_tool: SelectionTool = %SelectionTool
-
-
-func _process(_delta: float) -> void:
-	# [REGION PREVIEW] detect pan / zoom
-	if cam.global_position != _last_cam_pos or cam.zoom != _last_cam_zoom:
-		_last_cam_pos = cam.global_position
-		_last_cam_zoom = cam.zoom
-		_update_visible_regions()
 
 
 func _input(event: InputEvent) -> void:
@@ -73,18 +61,17 @@ func bind_map(map: Map) -> void:
 
 
 func set_origin_from_spawn(spawnpoint_abs: Vector2i) -> void:
-	_origin_chunk_abs = spawnpoint_abs / MapMath.CHUNK_WIDTH_BLOCKS
-	_origin_block_abs = _origin_chunk_abs * MapMath.CHUNK_WIDTH_BLOCKS
+	_origin_chunk_abs = MapMath.spawnpoint_chunk_abs(spawnpoint_abs)
+	_origin_block_abs = spawnpoint_abs
+
 	_update_all_region_positions()
-	_force_region_refresh()
+	_update_visible_regions()
 
 
 func draw_silhouette_preview(relative_chunk_positions: Array[Vector2i]) -> void:
 	tilemap.clear()
 	for chunk_pos in relative_chunk_positions:
 		tilemap.set_cell(chunk_pos, 0, Vector2i(1, 0))
-
-	_force_region_refresh()
 
 
 func center_view() -> void:
@@ -93,7 +80,7 @@ func center_view() -> void:
 	if tilemap.get_cell_source_id(Vector2i.ZERO) != -1:
 		cam_target = Vector2i.ZERO
 	elif tilemap.get_cell_source_id(explored_rect_center_chunk) != -1:
-		cam_target = explored_rect_center_chunk * MapMath.CHUNK_WIDTH_BLOCKS
+		cam_target = MapMath.chunk_pos_to_block_pos(explored_rect_center_chunk)
 		Logger.warn(
 			"No explored chunk at (0,0). " +
 			"Centering view on the center of the explored map area instead.",
@@ -101,12 +88,6 @@ func center_view() -> void:
 	else:
 		cam_target = Vector2i.ZERO
 	cam.global_position = cam_target
-
-
-func _force_region_refresh() -> void:
-	_last_cam_pos = Vector2.INF
-	_last_cam_zoom = Vector2.INF
-	_update_visible_regions()
 
 
 func _update_visible_regions() -> void:
@@ -155,69 +136,34 @@ func _get_visible_block_rect_relative() -> Rect2i:
 
 
 func _request_new_regions(old_rect: Rect2i, new_rect: Rect2i, center: Vector2i, request_id: int) -> void:
-	if _map == null:
-		return
-	if new_rect.size.x <= 0 or new_rect.size.y <= 0:
+	if _map == null or not new_rect.has_area():
 		return
 
 	var regions_to_request: Array[Vector2i] = []
 
-	# If there's no overlap, request the full new rect.
-	if old_rect.size.x <= 0 or old_rect.size.y <= 0 or not old_rect.intersects(new_rect):
-		for rz in range(new_rect.position.y, new_rect.end.y):
-			for rx in range(new_rect.position.x, new_rect.end.x):
+	# Compute up to 4 "newly visible" band-rects (half-open) and enumerate their cells.
+	var bands := MapMath.region_rect_diff_bands(old_rect, new_rect)
+	for r in bands:
+		if not r.has_area():
+			continue
+		for rz in range(r.position.y, r.end.y):
+			for rx in range(r.position.x, r.end.x):
 				regions_to_request.append(Vector2i(rx, rz))
-	else:
-		var old_end := old_rect.end
-		var new_end := new_rect.end
-
-		# Left band (full height).
-		if new_rect.position.x < old_rect.position.x:
-			var x0 := new_rect.position.x
-			var x1 := old_rect.position.x
-			for rz in range(new_rect.position.y, new_end.y):
-				for rx in range(x0, x1):
-					regions_to_request.append(Vector2i(rx, rz))
-
-		# Right band (full height).
-		if new_end.x > old_end.x:
-			var x0 := old_end.x
-			var x1 := new_end.x
-			for rz in range(new_rect.position.y, new_end.y):
-				for rx in range(x0, x1):
-					regions_to_request.append(Vector2i(rx, rz))
-
-		# Overlapping x-range for top/bottom bands.
-		var ox0 := maxi(new_rect.position.x, old_rect.position.x)
-		var ox1 := mini(new_end.x, old_end.x)
-		if ox1 > ox0:
-			# Top band.
-			if new_rect.position.y < old_rect.position.y:
-				var y0 := new_rect.position.y
-				var y1 := old_rect.position.y
-				for rz in range(y0, y1):
-					for rx in range(ox0, ox1):
-						regions_to_request.append(Vector2i(rx, rz))
-
-			# Bottom band.
-			if new_end.y > old_end.y:
-				var y0 := old_end.y
-				var y1 := new_end.y
-				for rz in range(y0, y1):
-					for rx in range(ox0, ox1):
-						regions_to_request.append(Vector2i(rx, rz))
 
 	if not regions_to_request.is_empty():
 		_map.request_region_textures(regions_to_request, center, request_id)
 
 
-func _create_region_sprite(region: Vector2i) -> void:
+func _create_region_sprite(region_pos: Vector2i) -> void:
 	var sprite := Sprite2D.new()
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
 	sprite.centered = false
-	sprite.position = _region_abs_to_relative_position(region)
+	sprite.position = MapMath.block_abs_to_block_rel(
+		MapMath.region_pos_to_block_pos(region_pos),
+		_origin_block_abs,
+	)
 	tilemap.add_child(sprite)
-	_region_sprites[region] = sprite
+	_region_sprites[region_pos] = sprite
 
 
 func _remove_region_sprite(region: Vector2i) -> void:
@@ -229,26 +175,21 @@ func _remove_region_sprite(region: Vector2i) -> void:
 
 func _update_all_region_positions() -> void:
 	for r: Vector2i in _region_sprites.keys():
-		_region_sprites[r].position = _region_abs_to_relative_position(r)
-
-
-func _region_abs_to_relative_position(region: Vector2i) -> Vector2:
-	var block_abs := region * MapMath.REGION_WIDTH_BLOCKS
-	var rel := block_abs - _origin_block_abs
-	return Vector2(rel.x, rel.y)
+		_region_sprites[r].position = MapMath.block_abs_to_block_rel(
+			MapMath.region_pos_to_block_pos(r),
+			_origin_block_abs,
+		)
 
 
 func _on_region_texture_ready(region: Vector2i, texture: Texture2D, request_id: int) -> void:
 	if not _wanted_region_rect.has_point(region):
 		return
 
-	# Region empty => ensure no sprite exists.
 	if texture == null:
 		if _region_sprites.has(region):
 			_remove_region_sprite(region)
 		return
 
-	# Non-empty region => create sprite if needed, then assign texture.
 	if not _region_sprites.has(region):
 		_create_region_sprite(region)
 	_region_sprites[region].texture = texture
@@ -283,7 +224,7 @@ func _process_chunk_line_edit_change() -> void:
 		Logger.debug("Vector2i correctly parsed : " + str(parsed.value))
 		if parsed.value != _last_hovered_chunk:
 			_last_hovered_chunk = parsed.value
-			cam.global_position = _last_hovered_chunk * MapMath.CHUNK_WIDTH_BLOCKS
+			cam.global_position = MapMath.chunk_pos_to_block_pos(_last_hovered_chunk)
 
 
 func _parse_vector2i(text: String) -> Dictionary:
@@ -317,19 +258,24 @@ func _parse_vector2i(text: String) -> Dictionary:
 
 
 func _on_zoom_increase_button_pressed() -> void:
-	cam.set_zoom_level(cam.zoom.x * 1.5, cam.position)
+	cam.set_zoom_level(cam.zoom.x * 1.5)
 
 
 func _on_zoom_decrease_button_pressed() -> void:
-	cam.set_zoom_level(cam.zoom.x / 1.5, cam.position)
+	cam.set_zoom_level(cam.zoom.x / 1.5)
 
 
 func _on_center_view_button_pressed() -> void:
 	center_view()
 
 
+func _on_pan_zoom_camera_position_changed(_value: Vector2) -> void:
+	_update_visible_regions()
+
+
 func _on_pan_zoom_camera_zoom_changed(value: float) -> void:
 	zoom_label.text = str(int(100 * value)) + "%"
+	_update_visible_regions()
 
 
 func _on_block_pos_line_edit_text_submitted(_new_text: String) -> void:

@@ -164,6 +164,7 @@ theme_override_constants/minimum_character_width = 0
 text = "0,0"
 expand_to_text_length = true
 
+[connection signal="position_changed" from="SubViewport/PanZoomCamera" to="." method="_on_pan_zoom_camera_position_changed"]
 [connection signal="zoom_changed" from="SubViewport/PanZoomCamera" to="." method="_on_pan_zoom_camera_zoom_changed"]
 [connection signal="pressed" from="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom/CenterViewButton" to="." method="_on_center_view_button_pressed"]
 [connection signal="pressed" from="TopLeftInfoBox/InfoBoxVBoxContainer/Zoom/ZoomDecreaseButton" to="." method="_on_zoom_decrease_button_pressed"]
