@@ -555,8 +555,8 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 	var topleft: Vector2i
 	var bottomright: Vector2i
 	if whole_map:
-		topleft = map.top_left_block_abs
-		bottomright = map.bottom_right_block_abs
+		topleft = MapMath.chunk_pos_to_block_pos(map.explored_chunks_rect_abs.position)
+		bottomright = MapMath.chunk_pos_to_block_pos(map.explored_chunks_rect_abs.end)
 		Logger.info("Exporting whole map. Bounds: {0}, {1}".format([topleft, bottomright]))
 	else:
 		if use_relative_coords:
