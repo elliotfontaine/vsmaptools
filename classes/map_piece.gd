@@ -27,7 +27,7 @@ static func decode_blob_to_rgba32(data: PackedByteArray) -> PackedByteArray:
 		return PackedByteArray()
 
 	var pixels: Array[int] = message.get_Pixels()
-	if pixels.size() != MapMath.CHUNK_WIDTH_BLOCKS**2:
+	if pixels.size() != MapMath.CHUNK_WIDTH_BLOCKS ** 2:
 		push_error("Unexpected pixel array size")
 		return PackedByteArray()
 
@@ -50,7 +50,13 @@ static func decode_blob_to_image(data: PackedByteArray, downscale_factor: int = 
 	var rgba := decode_blob_to_rgba32(data)
 	if rgba.is_empty():
 		return null
-	var img := Image.create_from_data(CHUNK_WIDTH_BLOCKS, CHUNK_WIDTH_BLOCKS, false, Image.FORMAT_RGBA8, rgba)
+	var img := Image.create_from_data(
+		CHUNK_WIDTH_BLOCKS,
+		CHUNK_WIDTH_BLOCKS,
+		false,
+		Image.FORMAT_RGBA8,
+		rgba,
+	)
 	if downscale_factor > 1:
 		@warning_ignore("integer_division")
 		img.resize(
@@ -66,7 +72,13 @@ func decode_blob(data: PackedByteArray) -> void:
 
 
 func generate_image(downscale_factor: int = 1) -> Image:
-	var img := Image.create_from_data(CHUNK_WIDTH_BLOCKS, CHUNK_WIDTH_BLOCKS, false, Image.FORMAT_RGBA8, pixel_data)
+	var img := Image.create_from_data(
+		CHUNK_WIDTH_BLOCKS,
+		CHUNK_WIDTH_BLOCKS,
+		false,
+		Image.FORMAT_RGBA8,
+		pixel_data,
+	)
 	if downscale_factor > 1:
 		@warning_ignore("integer_division")
 		img.resize(

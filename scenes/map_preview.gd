@@ -9,7 +9,6 @@ const REGION_MARGIN := 1
 var _map: Map = null
 var _origin_chunk_abs: Vector2i = Vector2i.ZERO
 var _origin_block_abs: Vector2i = Vector2i.ZERO
-var _region_layer: Node2D
 var _region_sprites: Dictionary[Vector2i, Sprite2D] = { }
 var _wanted_region_rect: Rect2i = Rect2i(Vector2i.ZERO, Vector2i.ZERO) # region coords (half-open)
 # request generation id (ignore stale results)
@@ -32,13 +31,6 @@ var _last_hovered_block := Vector2i(-9999, -9999)
 @onready var zoom_decrease_button: Button = %ZoomDecreaseButton
 @onready var zoom_increase_button: Button = %ZoomIncreaseButton
 @onready var selection_tool: SelectionTool = %SelectionTool
-
-
-func _ready() -> void:
-	# [REGION PREVIEW] create overlay layer
-	_region_layer = Node2D.new()
-	_region_layer.name = "RegionPreviewLayer"
-	tilemap.add_child(_region_layer)
 
 
 func _process(_delta: float) -> void:
@@ -109,10 +101,6 @@ func center_view() -> void:
 	else:
 		cam_target = Vector2i.ZERO
 	cam.global_position = cam_target
-
-# ------------------------------------------------------------------
-# [REGION PREVIEW] region visibility & requests
-# ------------------------------------------------------------------
 
 
 func _force_region_refresh() -> void:
@@ -222,17 +210,13 @@ func _request_new_regions(old_rect: Rect2i, new_rect: Rect2i, center: Vector2i, 
 	if not regions_to_request.is_empty():
 		_map.request_region_textures(regions_to_request, center, request_id)
 
-# ------------------------------------------------------------------
-# [REGION PREVIEW] sprites management
-# ------------------------------------------------------------------
-
 
 func _create_region_sprite(region: Vector2i) -> void:
 	var sprite := Sprite2D.new()
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
 	sprite.centered = false
 	sprite.position = _region_abs_to_relative_position(region)
-	_region_layer.add_child(sprite)
+	tilemap.add_child(sprite)
 	_region_sprites[region] = sprite
 
 
@@ -252,10 +236,6 @@ func _region_abs_to_relative_position(region: Vector2i) -> Vector2:
 	var block_abs := region * MapMath.REGION_WIDTH_BLOCKS
 	var rel := block_abs - _origin_block_abs
 	return Vector2(rel.x, rel.y)
-
-# ------------------------------------------------------------------
-# [REGION PREVIEW] Map callbacks
-# ------------------------------------------------------------------
 
 
 func _on_region_texture_ready(region: Vector2i, texture: Texture2D, request_id: int) -> void:
@@ -278,10 +258,6 @@ func _on_region_texture_failed(region: Vector2i, error: String, request_id: int)
 	if request_id != _request_id:
 		return
 	push_warning("Region %s failed: %s" % [region, error])
-
-# ------------------------------------------------------------------
-# UI callbacks (UNCHANGED)
-# ------------------------------------------------------------------
 
 
 func _process_block_line_edit_change() -> void:

@@ -35,22 +35,22 @@ var db: SQLite = null
 var map: Map
 var export_type := ExportType.PNG
 var downscale_factor: int = DOWNSCALE_FACTORS[0]
-var min_X: int:
+var min_x: int:
 	set(value):
 		_set_box_property(BoxProperty.MIN_X, value)
 	get:
 		return _get_box_property(BoxProperty.MIN_X)
-var max_X: int:
+var max_x: int:
 	set(value):
 		_set_box_property(BoxProperty.MAX_X, value)
 	get:
 		return _get_box_property(BoxProperty.MAX_X)
-var min_Z: int:
+var min_z: int:
 	set(value):
 		_set_box_property(BoxProperty.MIN_Z, value)
 	get:
 		return _get_box_property(BoxProperty.MIN_Z)
-var max_Z: int:
+var max_z: int:
 	set(value):
 		_set_box_property(BoxProperty.MAX_Z, value)
 	get:
@@ -218,10 +218,10 @@ func _set_selection_to_bounds() -> void:
 	var br_abs := MapMath.chunk_pos_to_block_pos(map.explored_chunks_rect_abs.end)
 	var tl := tl_abs - spawnpoint_block_abs * int(use_relative_coords)
 	var br := br_abs - spawnpoint_block_abs * int(use_relative_coords)
-	min_X = tl.x
-	max_X = br.x
-	min_Z = tl.y
-	max_Z = br.y
+	min_x = tl.x
+	max_x = br.x
+	min_z = tl.y
+	max_z = br.y
 
 
 func _set_box_property(property: BoxProperty, value: Variant) -> void:
@@ -313,9 +313,9 @@ func _add_directory_files_to_option_button(
 
 func _get_projected_image_size() -> Vector2i:
 	@warning_ignore("integer_division")
-	var x: int = (max_X - min_X) / downscale_factor
+	var x: int = (max_x - min_x) / downscale_factor
 	@warning_ignore("integer_division")
-	var z: int = (max_Z - min_Z) / downscale_factor
+	var z: int = (max_z - min_z) / downscale_factor
 	return Vector2i(x, z)
 
 
@@ -344,17 +344,17 @@ func _export_options_are_valid() -> bool:
 	if whole_map:
 		Logger.debug("Export options are valid.")
 		return true
-	if min_X == max_X and max_X == min_Z and min_Z == max_Z:
+	if min_x == max_x and max_x == min_z and min_z == max_z:
 		Logger.error(
 			"Selection is empty because bounds are identical. Consider enabling `whole_map`.",
 			&"main",
 			ERR_INVALID_DATA,
 		)
 		return false
-	if not min_X < max_X:
+	if not min_x < max_x:
 		Logger.error("Min X should be lower than Max X.", &"main", ERR_INVALID_DATA)
 		return false
-	if not min_Z < max_Z:
+	if not min_z < max_z:
 		Logger.error("Min Z should be lower than Max Z.", &"main", ERR_INVALID_DATA)
 		return false
 
@@ -499,10 +499,10 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 	if key == PROP_STRINGNAMES[BoxProperty.USE_RELATIVE]:
 		var diff := spawnpoint_block_abs
 		var diff_sign := -1 if is_true else 1
-		min_X += diff.x * diff_sign
-		max_X += diff.x * diff_sign
-		min_Z += diff.y * diff_sign
-		max_Z += diff.y * diff_sign
+		min_x += diff.x * diff_sign
+		max_x += diff.x * diff_sign
+		min_z += diff.y * diff_sign
+		max_z += diff.y * diff_sign
 		update_displayed_bounds()
 
 	if key == PROP_STRINGNAMES[BoxProperty.WHOLE_MAP]:
@@ -523,7 +523,7 @@ func _on_export_properties_box_bool_changed(key: StringName, is_true: bool) -> v
 
 
 func _on_export_properties_box_number_changed(_key: StringName, _new_value: bool) -> void:
-	update_displayed_image_size() # for changes to min_X, max_X, min_Z, max_Z
+	update_displayed_image_size() # for changes to min_x, max_x, min_z, max_z
 	update_displayed_bounds() # for changes to spawnpoint_block_abs
 
 
@@ -559,12 +559,8 @@ func _on_export_file_dialog_file_selected(path: String) -> void:
 		bottomright = MapMath.chunk_pos_to_block_pos(map.explored_chunks_rect_abs.end)
 		Logger.info("Exporting whole map. Bounds: {0}, {1}".format([topleft, bottomright]))
 	else:
-		if use_relative_coords:
-			topleft = Vector2i(min_X, min_Z) + spawnpoint_block_abs
-			bottomright = Vector2i(max_X, max_Z) + spawnpoint_block_abs
-		else:
-			topleft = Vector2i(min_X, min_Z)
-			bottomright = Vector2i(max_X, max_Z)
+		topleft = Vector2i(min_x, min_z) + spawnpoint_block_abs * int(use_relative_coords)
+		bottomright = Vector2i(max_x, max_z) + spawnpoint_block_abs * int(use_relative_coords)
 		Logger.info("Exporting map subset. Bounds: {0}, {1}".format([topleft, bottomright]))
 
 	Logger.info("Processing image for export...")
@@ -611,10 +607,10 @@ func _on_selection_tool_selected(rect: Rect2) -> void:
 	if whole_map:
 		whole_map = false
 	var rect_i := Rect2i(rect)
-	min_X = rect_i.position.x + (spawnpoint_block_abs.x * int(!use_relative_coords))
-	min_Z = rect_i.position.y + (spawnpoint_block_abs.y * int(!use_relative_coords))
-	max_X = rect_i.end.x + (spawnpoint_block_abs.x * int(!use_relative_coords))
-	max_Z = rect_i.end.y + (spawnpoint_block_abs.y * int(!use_relative_coords))
+	min_x = rect_i.position.x + (spawnpoint_block_abs.x * int(!use_relative_coords))
+	min_z = rect_i.position.y + (spawnpoint_block_abs.y * int(!use_relative_coords))
+	max_x = rect_i.end.x + (spawnpoint_block_abs.x * int(!use_relative_coords))
+	max_z = rect_i.end.y + (spawnpoint_block_abs.y * int(!use_relative_coords))
 
 
 func _on_import_option_button_item_selected(index: int) -> void:

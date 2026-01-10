@@ -67,7 +67,9 @@ func _process(_delta: float) -> void:
 		_clean_up_worker()
 	elif WorkerThreadPool.get_group_processed_element_count(_task_id) != 0:
 		@warning_ignore("integer_division")
-		var percent: int = 100 * WorkerThreadPool.get_group_processed_element_count(_task_id) / N_BATCHES
+		var percent: int = (
+			100 * WorkerThreadPool.get_group_processed_element_count(_task_id) / N_BATCHES
+		)
 		if percent != _export_progress:
 			_export_progress = percent
 			export_progressed.emit(percent)
@@ -114,7 +116,10 @@ func build_export_threaded(
 		for piece: MapPiece in _map_pieces.values():
 			var piece_block_rect_abs := MapMath.chunk_pos_to_block_rect(piece.chunk_pos_abs)
 			# Keep pieces that overlap the export rect (in block coordinates).
-			if export_block_rect_abs.has_point(piece_block_rect_abs.position) or export_block_rect_abs.intersects(piece_block_rect_abs):
+			if (
+				export_block_rect_abs.has_point(piece_block_rect_abs.position)
+				or export_block_rect_abs.intersects(piece_block_rect_abs)
+			):
 				pieces_to_process.append(piece)
 
 	_export_batches = Utils.split_array_evenly(pieces_to_process, N_BATCHES)
@@ -235,14 +240,14 @@ func _update_explored_chunks_rect_abs(chunk_pos_abs: Vector2i) -> void:
 	if not explored_chunks_rect_abs.has_area():
 		explored_chunks_rect_abs = Rect2i(chunk_pos_abs, Vector2i.ONE)
 		return
-	
+
 	explored_chunks_rect_abs = explored_chunks_rect_abs.expand(chunk_pos_abs)
 	explored_chunks_rect_abs = explored_chunks_rect_abs.expand(chunk_pos_abs + Vector2i.ONE)
 
 
-
 func _set_chunks_count() -> void:
 	_db.open_db()
+	# TODO: this query will freeze the app with larger maps
 	_db.query("SELECT COUNT(1) FROM {TABLE_NAME}".format({ &"TABLE_NAME": TABLE_NAME }))
 	chunks_count = _db.query_result[0]["COUNT(1)"]
 	_db.close_db()
@@ -443,8 +448,6 @@ class RegionTextureProvider extends RefCounted:
 			return
 		_drain_results(false)
 
-	# --- Internals -------------------------------------------------------------
-
 
 	func _drain_results(ignore_results: bool) -> void:
 		var local: Array[Dictionary] = []
@@ -572,7 +575,13 @@ class RegionTextureProvider extends RefCounted:
 			var rgba := MapPiece.decode_blob_to_rgba32(blob)
 			if rgba.is_empty():
 				continue
-			var chunk_img := Image.create_from_data(chunk_block_size.x, chunk_block_size.y, false, _FORMAT, rgba)
+			var chunk_img := Image.create_from_data(
+				chunk_block_size.x,
+				chunk_block_size.y,
+				false,
+				_FORMAT,
+				rgba,
+			)
 			img.blit_rect(
 				chunk_img,
 				Rect2i(Vector2i.ZERO, chunk_block_size),
